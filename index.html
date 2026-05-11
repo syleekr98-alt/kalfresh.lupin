@@ -1338,7 +1338,7 @@ function itemHTML(r,section=false){
     icon=r.support?'🔀':'⏱️';icocls=r.support?'support-ico':'work';
     label=r.place||'근무';
     sub=`${r.date} · ${r.hours}h ${r.mins}m · $${r.dailyRate}/h${r.holiday?' 🎉':''}${r.memo?' · '+r.memo:''}`;
-    amt=fmtA(r.net);amtCls='pos';
+    amt=fmtA(r.gross);amtCls='pos';
     return `<div class="tx-item${r.support?' support':''}">
       <div class="tx-ico ${icocls}">${icon}</div>
       <div class="tx-body"><div class="tn">${label}${supBadge}</div><div class="ts">${sub}</div></div>
@@ -1392,10 +1392,10 @@ function renderHistory(){
         const wRecs=weekMap[wk];
         const mainRecs=wRecs.filter(x=>!x.support);
         const avg=mainRecs.length>0?mainRecs.map(x=>x.dailyRate).reduce((s,v)=>s+v,0)/mainRecs.length:0;
-        const totalNet=wRecs.reduce((s,x)=>s+x.net,0);
+        const totalGross=wRecs.reduce((s,x)=>s+x.gross,0);
         const d=new Date(wk);const end=new Date(wk);end.setDate(end.getDate()+6);
         const supCount=wRecs.filter(x=>x.support).length;
-        html+=`<div class="wk-label"><span class="wl">📅 ${d.getMonth()+1}/${d.getDate()} ~ ${end.getMonth()+1}/${end.getDate()}</span><span class="wr">${avg>0?`avg $${avg.toFixed(2)}/h`:''} · 주급 $${totalNet.toFixed(2)}${supCount>0?` · 지원 ${supCount}회`:''}</span></div>`;
+        html+=`<div class="wk-label"><span class="wl">📅 ${d.getMonth()+1}/${d.getDate()} ~ ${end.getMonth()+1}/${end.getDate()}</span><span class="wr">${avg>0?`avg $${avg.toFixed(2)}/h`:''} · 주급(세전) $${totalGross.toFixed(2)}${supCount>0?` · 지원 ${supCount}회`:''}</span></div>`;
       }
       sectionItems.push(itemHTML(r));
     } else {flush();lastWk='';html+=`<div class="tx-section" style="margin:0 16px 8px">${itemHTML(r)}</div>`;}
@@ -1420,7 +1420,7 @@ function renderCalendar(){
   const dayMap={};
   getMRecs(hY,hM).forEach(r=>{
     const d=r.date.slice(8,10);if(!dayMap[d])dayMap[d]={earn:0,spend:0};
-    if(r.type==='work')dayMap[d].earn+=r.net;else if(r.type==='income')dayMap[d].earn+=r.amount;else if(r.type==='spend')dayMap[d].spend+=r.amount;
+    if(r.type==='work')dayMap[d].earn+=r.gross;else if(r.type==='income')dayMap[d].earn+=r.amount;else if(r.type==='spend')dayMap[d].spend+=r.amount;
   });
   const hdrs=['월','화','수','목','금','토','일'];
   let html=hdrs.map(h=>`<div class="cal-day-hdr">${h}</div>`).join('');
