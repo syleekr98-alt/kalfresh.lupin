@@ -388,6 +388,17 @@ body {
 .wk-bar.e { background:linear-gradient(180deg,var(--camel),var(--camel-light)) }
 .wk-lbl { font-size:9px;color:var(--textl);font-weight:700;margin-top:4px }
 
+/* PERIOD SWITCHER */
+.period-switcher {
+  display:flex;gap:0;background:var(--powder);border-radius:14px;
+  padding:3px;margin:0 16px 14px;
+}
+.period-btn {
+  flex:1;background:none;border:none;border-radius:11px;padding:9px;
+  font-size:13px;font-weight:700;color:var(--textm);cursor:pointer;font-family:inherit;transition:all 0.2s;
+}
+.period-btn.active { background:var(--surface);color:var(--camel);box-shadow:var(--sh) }
+
 /* LINE CHART */
 .lchart-wrap { height:100px;margin-bottom:8px }
 .lchart-svg { width:100%;height:100% }
@@ -712,7 +723,14 @@ body {
 <div class="page" id="page-stats">
   <div class="main-content">
     <div class="pull-handle"></div>
-    <div class="mnav">
+
+    <!-- 기간 선택 탭 -->
+    <div class="period-switcher">
+      <button class="period-btn active" onclick="setPeriod('month',this)" id="btnMonth">📅 이번달</button>
+      <button class="period-btn" onclick="setPeriod('week',this)" id="btnWeek">⚡ 이번주</button>
+    </div>
+
+    <div class="mnav" id="statsMonthNav">
       <button onclick="prevSM()">◀</button>
       <span id="sMonthLbl"></span>
       <button onclick="nextSM()">▶</button>
@@ -786,7 +804,18 @@ body {
         <select id="sPH" onchange="saveSetting()"><option value="225">2.25배 (QLD)</option><option value="200">2배</option><option value="250">2.5배</option></select>
       </div>
       <div class="setrow"><div><div class="sn">TFN 상태</div><div class="ss">세율 결정</div></div>
-        <select id="sTFN" onchange="saveSetting()"><option value="tfn">TFN 있음 (15%)</option><option value="notfn">TFN 없음 (45%)</option><option value="resi">거주자 (누진세)</option></select>
+        <select id="sTFN" onchange="saveSetting()">
+          <option value="tfn">TFN 있음 (15%)</option>
+          <option value="tfn30">TFN 있음 (15%→30%)</option>
+          <option value="notfn">TFN 없음 (45%)</option>
+          <option value="resi">거주자 (누진세)</option>
+        </select>
+      </div>
+      <div class="setrow" id="tfn30InfoRow" style="display:none">
+        <div style="font-size:11px;color:var(--camel);font-weight:600;line-height:1.5;padding:2px 0">
+          ⚠️ 워홀 비자: $45,000 이하 15%, 초과분은 30% 적용<br>
+          <span style="color:var(--textl)">현재 회계연도 누적 소득 기준으로 자동 계산돼요</span>
+        </div>
       </div>
       <div class="setrow"><div><div class="sn">연금율 Super (%)</div><div class="ss">현행 11.5%</div></div><input type="number" id="sSuperRate" value="11.5" step="0.1" oninput="saveSetting()"></div>
     </div>
@@ -966,6 +995,9 @@ function saveSetting(){
   cfg.goalDate=document.getElementById('sGoalDate').value;
   cfg.goalType=document.getElementById('sGoalType').value;
   cfg.manRate=parseFloat(document.getElementById('sManRate').value)||940;
+  // tfn30 안내 행 토글
+  const infoRow=document.getElementById('tfn30InfoRow');
+  if(infoRow) infoRow.style.display=cfg.tfn==='tfn30'?'':'none';
   localStorage.setItem('kfp_cfg',JSON.stringify(cfg));render();
 }
 function addWP(){
@@ -1028,9 +1060,35 @@ function updateExUI(manual=false){
 }
 function toggleCurrency(){showKrw=!showKrw;render();showToast(showKrw?'원화로 표시':'달러로 표시');}
 
-function calcTax(gross){
-  if(cfg.tfn==='notfn')return gross*0.45;
-  if(cfg.tfn==='resi'){const a=gross*52;let t=0;if(a>180000)t=51667+(a-180000)*0.45;else if(a>120000)t=29467+(a-120000)*0.37;else if(a>45000)t=5092+(a-45000)*0.325;else if(a>18200)t=(a-18200)*0.19;return t/52;}
+function calcTax(gross, dateStr){
+  if(cfg.tfn==='notfn') return gross*0.45;
+  if(cfg.tfn==='resi'){
+    const a=gross*52;let t=0;
+    if(a>180000)t=51667+(a-180000)*0.45;
+    else if(a>120000)t=29467+(a-120000)*0.37;
+    else if(a>45000)t=5092+(a-45000)*0.325;
+    else if(a>18200)t=(a-18200)*0.19;
+    return t/52;
+  }
+  if(cfg.tfn==='tfn30'){
+    // 워홀 비자: 회계연도 누적 $45,000 이하 15%, 초과분 30%
+    const now=new Date();
+    const fyS=now.getMonth()>=6?`${now.getFullYear()}-07-01`:`${now.getFullYear()-1}-07-01`;
+    const cutoff=dateStr||'9999-12-31';
+    const prevGross=records
+      .filter(r=>r.type==='work'&&r.date>=fyS&&r.date<cutoff)
+      .reduce((s,r)=>s+(r.gross||0),0);
+    const limit=45000;
+    if(prevGross>=limit){
+      return gross*0.30;
+    } else if(prevGross+gross>limit){
+      const under=limit-prevGross;
+      const over=gross-under;
+      return under*0.15+over*0.30;
+    } else {
+      return gross*0.15;
+    }
+  }
   return gross*0.15;
 }
 function calcSuper(gross){return gross*(cfg.superRate||11.5)/100;}
@@ -1062,8 +1120,9 @@ function saveWork(){
   const dr=parseFloat(document.getElementById('wRate').value)||cfg.wage;
   if(h===0&&m===0){showToast('근무시간을 입력해주세요');return;}
   let rate=dr;if(hol)rate=dr*(cfg.ph/100);
-  const gross=(h+m/60)*rate;const tax=calcTax(gross);const superAmt=calcSuper(gross);
-  records.unshift({id:Date.now(),type:'work',date:document.getElementById('wDate').value,place:document.getElementById('wPlace').value||'미정',hours:h,mins:m,holiday:hol,support:sup,dailyRate:dr,appliedRate:rate,gross,tax,net:gross-tax,superAmt,memo:document.getElementById('wMemo').value});
+  const wDate=document.getElementById('wDate').value;
+  const gross=(h+m/60)*rate;const tax=calcTax(gross,wDate);const superAmt=calcSuper(gross);
+  records.unshift({id:Date.now(),type:'work',date:wDate,place:document.getElementById('wPlace').value||'미정',hours:h,mins:m,holiday:hol,support:sup,dailyRate:dr,appliedRate:rate,gross,tax,net:gross-tax,superAmt,memo:document.getElementById('wMemo').value});
   save();closeM('mWork');showToast(sup?'지원 근무 저장!':'근무 기록 저장!');
   ['wH','wM','wMemo'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('wHol').checked=false;document.getElementById('wSupport').checked=false;autoFillWage();
@@ -1132,8 +1191,8 @@ function updateWork(){
   const dr=parseFloat(document.getElementById('ewRate').value)||cfg.wage;
   if(h===0&&m===0){showToast('근무시간을 입력해주세요');return;}
   let rate=dr;if(hol)rate=dr*(cfg.ph/100);
-  const gross=(h+m/60)*rate;const tax=calcTax(gross);const superAmt=calcSuper(gross);
-  const idx=records.findIndex(r=>r.id===id);if(idx<0)return;
+  const ewDate=document.getElementById('ewDate').value;
+  const gross=(h+m/60)*rate;const tax=calcTax(gross,ewDate);const superAmt=calcSuper(gross);if(idx<0)return;
   records[idx]={...records[idx],date:document.getElementById('ewDate').value,place:document.getElementById('ewPlace').value||'미정',hours:h,mins:m,holiday:hol,support:sup,dailyRate:dr,appliedRate:rate,gross,tax,net:gross-tax,superAmt,memo:document.getElementById('ewMemo').value};
   save();closeM('mEditWork');showToast('수정 완료!');
 }
@@ -1389,9 +1448,40 @@ function showCalDay(d){
   el.innerHTML=`<div style="font-size:13px;font-weight:800;color:var(--textm);padding:8px 16px">${hM+1}월 ${d}일</div><div class="tx-section" style="margin:0 16px">${recs.map(r=>itemHTML(r)).join('')}</div>`;
 }
 
+let statsPeriod='month'; // 'month' or 'week'
+
+function setPeriod(p,btn){
+  statsPeriod=p;
+  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // 이번주면 월 네비 숨김
+  document.getElementById('statsMonthNav').style.display=p==='month'?'':'none';
+  renderStats();
+}
+
+function getWeekRecs(){
+  const now=new Date();
+  const day=now.getDay();
+  const diff=now.getDate()-(day===0?6:day-1);
+  const mon=new Date(now);mon.setDate(diff);
+  const sun=new Date(mon);sun.setDate(sun.getDate()+6);
+  const s=toDS(mon),e=toDS(sun);
+  return records.filter(r=>r.date>=s&&r.date<=e);
+}
+
+function getWeekLabel(){
+  const now=new Date();
+  const day=now.getDay();
+  const diff=now.getDate()-(day===0?6:day-1);
+  const mon=new Date(now);mon.setDate(diff);
+  const sun=new Date(mon);sun.setDate(sun.getDate()+6);
+  return `${mon.getMonth()+1}/${mon.getDate()} ~ ${sun.getMonth()+1}/${sun.getDate()}`;
+}
+
 function renderStats(){
-  document.getElementById('sMonthLbl').textContent=ml(sY,sM);
-  const recs=getMRecs(sY,sM);
+  const isWeek=statsPeriod==='week';
+  const recs=isWeek?getWeekRecs():getMRecs(sY,sM);
+  document.getElementById('sMonthLbl').textContent=isWeek?getWeekLabel():ml(sY,sM);
   const grossPretax=recs.filter(r=>r.type==='work').reduce((s,r)=>s+r.gross,0)+recs.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
   const spend=recs.filter(r=>r.type==='spend').reduce((s,r)=>s+r.amount,0);
   const hours=recs.filter(r=>r.type==='work').reduce((s,r)=>s+r.hours+r.mins/60,0);
@@ -1462,13 +1552,30 @@ function renderTaxInfo(recs){
   const tax=recs.filter(r=>r.type==='work').reduce((s,r)=>s+r.tax,0);
   const superTotal=recs.filter(r=>r.type==='work').reduce((s,r)=>s+(r.superAmt||calcSuper(r.gross||0)),0);
   const rate=gross>0?(tax/gross*100).toFixed(1):'0';
+  // 워홀 30% 구간이면 회계연도 누적 표시
+  let whvRow='';
+  if(cfg.tfn==='tfn30'){
+    const now=new Date();
+    const fyS=now.getMonth()>=6?`${now.getFullYear()}-07-01`:`${now.getFullYear()-1}-07-01`;
+    const fyGross=records.filter(r=>r.type==='work'&&r.date>=fyS).reduce((s,r)=>s+(r.gross||0),0);
+    const remaining=Math.max(0,45000-fyGross);
+    const over=Math.max(0,fyGross-45000);
+    whvRow=`<div class="tax-row" style="border-top:1px solid rgba(255,255,255,0.1);margin-top:4px;padding-top:8px">
+      <span class="tk">회계연도 누적 세전</span><span class="tv">$${fyGross.toFixed(0)}</span>
+    </div>
+    <div class="tax-row">
+      <span class="tk">${remaining>0?`15% 한도 잔여`:'30% 구간 초과'}</span>
+      <span class="tv" style="color:${remaining>0?'#7dff7d':'#ffb3a8'}">${remaining>0?`$${remaining.toFixed(0)} 남음`:`$${over.toFixed(0)} 초과`}</span>
+    </div>`;
+  }
   document.getElementById('taxRows').innerHTML=`
     <div class="tax-row"><span class="tk">세전 급여</span><span class="tv">$${gross.toFixed(2)}</span></div>
     <div class="tax-row"><span class="tk">공제 세금</span><span class="tv">-$${tax.toFixed(2)}</span></div>
     <div class="tax-row"><span class="tk">실효 세율</span><span class="tv">${rate}%</span></div>
     <div class="tax-row"><span class="tk">연금 Super ${cfg.superRate}%</span><span class="tv" style="color:#7dff7d">+$${superTotal.toFixed(2)}</span></div>
     <div class="tax-row hl"><span class="tk">세후 수령</span><span class="tv">$${(gross-tax).toFixed(2)}</span></div>
-    <div class="tax-row"><span class="tk">TFN</span><span class="tv">${cfg.tfn==='notfn'?'없음(45%)':cfg.tfn==='resi'?'거주자':'있음(15%)'}</span></div>`;
+    <div class="tax-row"><span class="tk">TFN</span><span class="tv">${cfg.tfn==='notfn'?'없음(45%)':cfg.tfn==='tfn30'?'워홀(15%→30%)':cfg.tfn==='resi'?'거주자':'있음(15%)'}</span></div>
+    ${whvRow}`;
 }
 
 function renderTaxReturn(){
