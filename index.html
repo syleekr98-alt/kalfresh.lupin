@@ -595,7 +595,7 @@ body {
   <div class="hdr-top">
     <div class="logo-area">
       <h1>🌽 칼프루팡</h1>
-      <p>made by LSY</p>
+      <p>나의 호주 워홀 기록장</p>
     </div>
     <div class="hdr-rate" onclick="toggleCurrency()">
       <div class="rl">AUD/KRW</div>
@@ -603,7 +603,7 @@ body {
     </div>
   </div>
   <div class="hdr-stats">
-    <div class="hsc"><div class="hl">세후 수입</div><div class="hv" id="hdrGross">$0</div></div>
+    <div class="hsc"><div class="hl">세전 수입</div><div class="hv" id="hdrGross">$0</div></div>
     <div class="hsc"><div class="hl">지출</div><div class="hv" id="hdrSpend">$0</div></div>
     <div class="hsc net"><div class="hl">순수익</div><div class="hv" id="hdrNet">$0</div></div>
   </div>
@@ -669,7 +669,7 @@ body {
     <div class="qbtns">
       <button class="qbtn work" onclick="openM('work')"><span class="qi">⏱️</span>근무</button>
       <button class="qbtn spend" onclick="openM('spend')"><span class="qi">🧾</span>지출</button>
-      <button class="qbtn income" onclick="openM('income')"><span class="qi">💰</span>기타수입</button>
+      <button class="qbtn income" onclick="openM('income')"><span class="qi">🪙</span>기타수입</button>
     </div>
     <div class="stitle">최근 내역</div>
     <div id="recentList"></div>
@@ -718,7 +718,7 @@ body {
       <button onclick="nextSM()">▶</button>
     </div>
     <div class="sboxes">
-      <div class="sbox"><div class="sl">세후 수입</div><div class="sv" id="stGross">$0</div></div>
+      <div class="sbox"><div class="sl">세전 수입</div><div class="sv" id="stGross">$0</div></div>
       <div class="sbox red"><div class="sl">지출</div><div class="sv" id="stSpend">$0</div></div>
       <div class="sbox yellow"><div class="sl">총 근무시간</div><div class="sv" id="stHours">0h</div></div>
       <div class="sbox"><div class="sl">순수익</div><div class="sv" id="stNet">$0</div></div>
@@ -869,7 +869,7 @@ body {
 <div class="mover" id="mIncome">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="mtitle">💰 기타 수입 <button class="mclose" onclick="closeM('mIncome')">✕</button></div>
+    <div class="mtitle">🪙 기타 수입 <button class="mclose" onclick="closeM('mIncome')">✕</button></div>
     <div class="fg"><label>날짜</label><input type="date" id="iDate"></div>
     <div class="fg"><label>금액 (AUD)</label><input type="number" id="iAmt" placeholder="0.00" step="0.01" min="0"></div>
     <div class="fg"><label>메모</label><input type="text" id="iMemo" placeholder="수입 내용"></div>
@@ -922,7 +922,7 @@ body {
 let records = JSON.parse(localStorage.getItem('kfp_records')||'[]');
 let cfg = JSON.parse(localStorage.getItem('kfp_cfg')||JSON.stringify({
   wage:30.36,holiday:17.5,ph:225,tfn:'tfn',superRate:11.5,
-  workplaces:[{name:'콘',wage:0},{name:'캐럿',wage:0},{name:'빈',wage:0}],
+  workplaces:[{name:'옥수수 파트',wage:0},{name:'콩 파트',wage:0},{name:'카페',wage:0}],
   categories:['식비','교통','쇼핑','숙박','의료','통신','여행','기타'],
   goalAmt:0,goalDate:'',goalType:'',manRate:940
 }));
@@ -1143,12 +1143,13 @@ function getMRecs(y,m){return records.filter(r=>{const d=new Date(r.date);return
 
 function renderHeader(){
   const now=new Date();const recs=getMRecs(now.getFullYear(),now.getMonth());
-  const gross=recs.filter(r=>r.type==='work').reduce((s,r)=>s+r.net,0)+recs.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
+  const grossPretax=recs.filter(r=>r.type==='work').reduce((s,r)=>s+r.gross,0)+recs.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
   const spend=recs.filter(r=>r.type==='spend').reduce((s,r)=>s+r.amount,0);
   const superTotal=recs.filter(r=>r.type==='work').reduce((s,r)=>s+(r.superAmt||calcSuper(r.gross||0)),0);
-  document.getElementById('hdrGross').textContent=fmtS(gross);
+  const netIncome=recs.filter(r=>r.type==='work').reduce((s,r)=>s+r.net,0)+recs.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
+  document.getElementById('hdrGross').textContent=fmtS(grossPretax);
   document.getElementById('hdrSpend').textContent=fmtS(spend);
-  document.getElementById('hdrNet').textContent=fmtS(gross-spend);
+  document.getElementById('hdrNet').textContent=fmtS(netIncome-spend);
   document.getElementById('hdrSuper').textContent=`$${superTotal.toFixed(2)}`;
   const totalNet=records.filter(r=>r.type==='work').reduce((s,r)=>s+r.net,0)+records.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0)-records.filter(r=>r.type==='spend').reduce((s,r)=>s+r.amount,0);
   if(cfg.goalAmt>0){
@@ -1293,7 +1294,7 @@ function itemHTML(r,section=false){
   } else if(r.type==='spend'){
     icon=CE[r.category]||'💸';icocls='spend';label=r.memo||r.category;sub=`${r.date} · ${r.category}`;amt=`-${fmtA(r.amount)}`;amtCls='neg';
   } else {
-    icon='💰';icocls='income';label=r.memo||'기타수입';sub=r.date;amt=`+${fmtA(r.amount)}`;amtCls='pos';
+    icon='🪙';icocls='income';label=r.memo||'기타수입';sub=r.date;amt=`+${fmtA(r.amount)}`;amtCls='pos';
   }
   return `<div class="tx-item">
     <div class="tx-ico ${icocls}">${icon}</div>
@@ -1391,27 +1392,33 @@ function showCalDay(d){
 function renderStats(){
   document.getElementById('sMonthLbl').textContent=ml(sY,sM);
   const recs=getMRecs(sY,sM);
-  const gross=recs.filter(r=>r.type==='work').reduce((s,r)=>s+r.net,0)+recs.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
+  const grossPretax=recs.filter(r=>r.type==='work').reduce((s,r)=>s+r.gross,0)+recs.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
   const spend=recs.filter(r=>r.type==='spend').reduce((s,r)=>s+r.amount,0);
   const hours=recs.filter(r=>r.type==='work').reduce((s,r)=>s+r.hours+r.mins/60,0);
-  document.getElementById('stGross').textContent=fmtA(gross);
+  const netIncome=recs.filter(r=>r.type==='work').reduce((s,r)=>s+r.net,0)+recs.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
+  document.getElementById('stGross').textContent=fmtA(grossPretax);
   document.getElementById('stSpend').textContent=fmtA(spend);
   document.getElementById('stHours').textContent=`${Math.floor(hours)}h`;
-  document.getElementById('stNet').textContent=fmtA(gross-spend);
+  document.getElementById('stNet').textContent=fmtA(netIncome-spend);
   renderGoal();renderEffChart(recs);renderWageTrend();renderTaxInfo(recs);renderTaxReturn();renderWkCharts();
 }
 
 function renderEffChart(recs){
   const el=document.getElementById('effChart');
   const wm={};
-  recs.filter(r=>r.type==='work').forEach(r=>{const p=r.place;if(!wm[p])wm[p]={net:0,hours:0};wm[p].net+=r.net;wm[p].hours+=r.hours+r.mins/60;});
-  const entries=Object.entries(wm).map(([n,v])=>({name:n,net:v.net,hours:v.hours,effRate:v.hours>0?v.net/v.hours:0})).sort((a,b)=>b.effRate-a.effRate);
+  recs.filter(r=>r.type==='work').forEach(r=>{
+    const p=r.place;
+    if(!wm[p])wm[p]={gross:0,hours:0};
+    wm[p].gross+=r.gross;
+    wm[p].hours+=r.hours+r.mins/60;
+  });
+  const entries=Object.entries(wm).map(([n,v])=>({name:n,gross:v.gross,hours:v.hours,effRate:v.hours>0?v.gross/v.hours:0})).sort((a,b)=>b.effRate-a.effRate);
   if(!entries.length){el.innerHTML='<p style="font-size:12px;color:var(--textl);text-align:center;padding:12px 0">근무 기록 없음</p>';return;}
   const rankClass=['r1','r2','r3'];
   let html=entries.map((e,i)=>`
     <div class="eff-item">
       <div class="eff-rank ${rankClass[i]||''}">${i+1}</div>
-      <div class="eff-info"><div class="en">${e.name}</div><div class="es">${e.hours.toFixed(1)}h 근무 · 총 $${e.net.toFixed(0)}</div></div>
+      <div class="eff-info"><div class="en">${e.name}</div><div class="es">${e.hours.toFixed(1)}h 근무 · 세전 $${e.gross.toFixed(0)}</div></div>
       <div class="eff-rate">$${e.effRate.toFixed(2)}/h</div>
     </div>`).join('');
   if(entries.length>=2){const diff=(entries[0].effRate-entries[entries.length-1].effRate).toFixed(2);html+=`<div class="eff-tip">💡 ${entries[0].name}이 ${entries[entries.length-1].name}보다 시간당 $${diff} 더 효율적이에요!</div>`;}
