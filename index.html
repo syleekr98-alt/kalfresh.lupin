@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#8B6F5E">
@@ -189,7 +189,7 @@ body {
   background:var(--surface);
   border-top:1px solid var(--divider);
   display:flex;
-  padding:8px 0 env(safe-area-inset-bottom,12px);
+  padding:8px 0 max(env(safe-area-inset-bottom), 16px);
   z-index:100;
   box-shadow:0 -4px 20px rgba(122,92,74,0.08);
 }
@@ -200,7 +200,7 @@ body {
 .btab.active .bi { transform:scale(1.15) }
 
 /* ── PAGES ── */
-.page { display:none;padding:0 0 90px;animation:fi 0.18s ease }
+.page { display:none;padding:0 0 110px;animation:fi 0.18s ease }
 .page.active { display:block }
 @keyframes fi { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
 
@@ -544,7 +544,7 @@ body {
 .modal {
   background:var(--surface2);
   border-radius:28px 28px 0 0;
-  padding:0 0 env(safe-area-inset-bottom,24px);
+  padding:0 0 max(env(safe-area-inset-bottom), 28px);
   width:100%;max-width:430px;max-height:92vh;overflow-y:auto;
   animation:su 0.26s cubic-bezier(.4,0,.2,1);
 }
@@ -580,6 +580,7 @@ body {
   background:var(--camel);color:#fff;border:none;border-radius:14px;
   padding:15px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;
   box-shadow:0 4px 16px rgba(184,144,106,0.35);transition:opacity 0.2s;display:block;
+  margin-bottom:env(safe-area-inset-bottom, 8px);
 }
 .subbtn:active { opacity:0.88 }
 
@@ -818,6 +819,7 @@ body {
         </div>
       </div>
       <div class="setrow"><div><div class="sn">연금율 Super (%)</div><div class="ss">현행 11.5%</div></div><input type="number" id="sSuperRate" value="11.5" step="0.1" oninput="saveSetting()"></div>
+      <div class="setrow"><div><div class="sn">브레이크 시간 (분)</div><div class="ss">컨츄랙 < 최저시급시 차감</div></div><input type="number" id="sBreakMins" value="30" step="5" oninput="saveSetting()"></div>
     </div>
 
     <div class="set-group">
@@ -950,7 +952,7 @@ body {
 // ── STATE ──
 let records = JSON.parse(localStorage.getItem('kfp_records')||'[]');
 let cfg = JSON.parse(localStorage.getItem('kfp_cfg')||JSON.stringify({
-  wage:30.36,holiday:17.5,ph:225,tfn:'tfn',superRate:11.5,
+  wage:30.36,holiday:17.5,ph:225,tfn:'tfn',superRate:11.5,breakMins:30,
   workplaces:[{name:'옥수수 파트',wage:0},{name:'콩 파트',wage:0},{name:'카페',wage:0}],
   categories:['식비','교통','쇼핑','숙박','의료','통신','여행','기타'],
   goalAmt:0,goalDate:'',goalType:'',manRate:940
@@ -979,6 +981,7 @@ function loadCfg(){
   document.getElementById('sPH').value=cfg.ph||225;
   document.getElementById('sTFN').value=cfg.tfn;
   document.getElementById('sSuperRate').value=cfg.superRate||11.5;
+  document.getElementById('sBreakMins').value=cfg.breakMins||30;
   document.getElementById('sGoalAmt').value=cfg.goalAmt||'';
   document.getElementById('sGoalDate').value=cfg.goalDate||'';
   document.getElementById('sGoalType').value=cfg.goalType||'';
@@ -991,6 +994,7 @@ function saveSetting(){
   cfg.ph=parseFloat(document.getElementById('sPH').value)||225;
   cfg.tfn=document.getElementById('sTFN').value;
   cfg.superRate=parseFloat(document.getElementById('sSuperRate').value)||11.5;
+  cfg.breakMins=parseFloat(document.getElementById('sBreakMins').value)||30;
   cfg.goalAmt=parseFloat(document.getElementById('sGoalAmt').value)||0;
   cfg.goalDate=document.getElementById('sGoalDate').value;
   cfg.goalType=document.getElementById('sGoalType').value;
@@ -1391,11 +1395,43 @@ function renderHistory(){
         flush();lastWk=wk;
         const wRecs=weekMap[wk];
         const mainRecs=wRecs.filter(x=>!x.support);
-        const avg=mainRecs.length>0?mainRecs.map(x=>x.dailyRate).reduce((s,v)=>s+v,0)/mainRecs.length:0;
-        const totalGross=wRecs.reduce((s,x)=>s+x.gross,0);
+        const supRecs=wRecs.filter(x=>x.support);
+        // 본 파트 평균 컨츄랙
+        const mainRates=mainRecs.map(x=>x.dailyRate);
+        const avg=mainRates.length>0?mainRates.reduce((s,v)=>s+v,0)/mainRates.length:0;
+        const minWage=cfg.wage||30.36;
+        const breakMins=cfg.breakMins||30;
+        // 본 파트 총 시간
+        const mainTotalHrs=mainRecs.reduce((s,x)=>s+x.hours+x.mins/60,0);
+        const mainDays=mainRecs.length;
+        // 지원 파트 총 지급 (그대로)
+        const supPay=supRecs.reduce((s,x)=>s+x.gross,0);
+        let actualPay=0;
+        let breakLabel='';
+        if(avg>0&&avg<minWage){
+          // 브레이크 차감 후 최저시급
+          const deductHrs=mainDays*(breakMins/60);
+          const effectiveHrs=Math.max(0,mainTotalHrs-deductHrs);
+          actualPay=effectiveHrs*minWage+supPay;
+          breakLabel=`⚠️ 브레이크 -${(deductHrs*60).toFixed(0)}분 차감 · 최저시급 $${minWage}`;
+        } else if(avg>=minWage){
+          // 전체 시간 보장
+          actualPay=mainRecs.reduce((s,x)=>s+x.gross,0)+supPay;
+          breakLabel=`✅ 전체 시간 보장`;
+        } else {
+          actualPay=wRecs.reduce((s,x)=>s+x.gross,0);
+          breakLabel='';
+        }
         const d=new Date(wk);const end=new Date(wk);end.setDate(end.getDate()+6);
-        const supCount=wRecs.filter(x=>x.support).length;
-        html+=`<div class="wk-label"><span class="wl">📅 ${d.getMonth()+1}/${d.getDate()} ~ ${end.getMonth()+1}/${end.getDate()}</span><span class="wr">${avg>0?`avg $${avg.toFixed(2)}/h`:''} · 주급(세전) $${totalGross.toFixed(2)}${supCount>0?` · 지원 ${supCount}회`:''}</span></div>`;
+        const supCount=supRecs.length;
+        html+=`<div class="wk-label">
+          <span class="wl">📅 ${d.getMonth()+1}/${d.getDate()} ~ ${end.getMonth()+1}/${end.getDate()}</span>
+          <span class="wr">${avg>0?`avg $${avg.toFixed(2)}/h · `:''}예상 페이 $${actualPay.toFixed(2)}${supCount>0?` · 지원 ${supCount}회`:''}</span>
+        </div>`;
+        if(breakLabel){
+          const isUnder=avg>0&&avg<minWage;
+          html+=`<div style="margin:0 16px 5px;font-size:10px;font-weight:700;color:${isUnder?'var(--red)':'var(--green)'};padding:5px 10px;background:${isUnder?'#faeaea':'#e8f5e8'};border-radius:8px">${breakLabel}</div>`;
+        }
       }
       sectionItems.push(itemHTML(r));
     } else {flush();lastWk='';html+=`<div class="tx-section" style="margin:0 16px 8px">${itemHTML(r)}</div>`;}
@@ -1524,27 +1560,62 @@ function renderWageTrend(){
   const W=360,H=90,P=14;
   const xs=wr.map((_,i)=>P+(i/(wr.length-1))*(W-P*2));
   const ys=rates.map(r=>H-P-(r-minR)/(maxR-minR)*(H-P*2));
-  let mainPath='',supPath='';
-  wr.forEach((r,i)=>{const cmd=i===0||wr[i-1].support!==r.support?`M ${xs[i]} ${ys[i]}`:`L ${xs[i]} ${ys[i]}`;if(r.support)supPath+=cmd;else mainPath+=cmd;});
+
+  // 본 파트: 갈색(camel), 지원 파트: 하늘색(sky) — 범례와 일치하게
+  // 연속된 구간별로 path 분리 (support 체크 기준)
+  let mainPaths=[], supPaths=[];
+  let curMain='', curSup='';
+  wr.forEach((r,i)=>{
+    const pt=`${i===0?'M':'L'} ${xs[i]} ${ys[i]}`;
+    if(r.support){
+      if(curMain){mainPaths.push(curMain);curMain='';}
+      curSup+=(curSup?` L ${xs[i]} ${ys[i]}`:`M ${xs[i]} ${ys[i]}`);
+    } else {
+      if(curSup){supPaths.push(curSup);curSup='';}
+      curMain+=(curMain?` L ${xs[i]} ${ys[i]}`:`M ${xs[i]} ${ys[i]}`);
+    }
+  });
+  if(curMain) mainPaths.push(curMain);
+  if(curSup) supPaths.push(curSup);
+
+  // 주간 평균선 — 본 파트만, 주별로 분리해서 독립적으로
   const wkMap={};
-  wr.forEach((r,i)=>{if(!r.support){const wk=getWK(r.date);if(!wkMap[wk])wkMap[wk]=[];wkMap[wk].push({rate:r.dailyRate,i});}});
+  wr.forEach((r,i)=>{
+    if(!r.support){
+      const wk=getWK(r.date);
+      if(!wkMap[wk]) wkMap[wk]=[];
+      wkMap[wk].push({rate:r.dailyRate,i});
+    }
+  });
   let avgLines='';
   Object.entries(wkMap).forEach(([wk,items])=>{
-    if(!items.length)return;
+    if(!items.length) return;
     const avg=items.reduce((s,x)=>s+x.rate,0)/items.length;
     const ay=H-P-(avg-minR)/(maxR-minR)*(H-P*2);
-    avgLines+=`<line x1="${xs[items[0].i]-3}" y1="${ay}" x2="${xs[items[items.length-1].i]+3}" y2="${ay}" stroke="#C8960A" stroke-width="1.5" stroke-dasharray="4,2"/>`;
+    const x1=xs[items[0].i];
+    const x2=xs[items[items.length-1].i];
+    avgLines+=`<line x1="${x1}" y1="${ay}" x2="${x2}" y2="${ay}" stroke="#C8960A" stroke-width="2" stroke-dasharray="5,3" opacity="0.85"/>`;
   });
-  const dots=wr.map((r,i)=>`<circle cx="${xs[i]}" cy="${ys[i]}" r="3.5" fill="${r.support?'#7AAABF':'#B8906A'}" stroke="#fff" stroke-width="1.5"/>`).join('');
+
+  // 점: 본 파트=갈색, 지원=하늘색
+  const dots=wr.map((r,i)=>
+    `<circle cx="${xs[i]}" cy="${ys[i]}" r="3.5" fill="${r.support?'#7AAABF':'#B8906A'}" stroke="#fff" stroke-width="1.5"/>`
+  ).join('');
+
   svg.innerHTML=`
-    ${mainPath?`<path d="${mainPath}" fill="none" stroke="#B8906A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`:''}
-    ${supPath?`<path d="${supPath}" fill="none" stroke="#7AAABF" stroke-width="2.5" stroke-dasharray="6,3" stroke-linecap="round"/>`:''}
-    ${avgLines}${dots}
+    ${mainPaths.map(p=>`<path d="${p}" fill="none" stroke="#B8906A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}
+    ${supPaths.map(p=>`<path d="${p}" fill="none" stroke="#7AAABF" stroke-width="2.5" stroke-dasharray="6,3" stroke-linecap="round"/>`).join('')}
+    ${avgLines}
+    ${dots}
     <text x="${P}" y="${H-2}" font-size="9" fill="#A08870">$${minR.toFixed(0)}</text>
     <text x="${P}" y="${P+8}" font-size="9" fill="#A08870">$${maxR.toFixed(0)}</text>`;
+
+  // 날짜 라벨 — 처음/중간/마지막
   const lblEl=document.getElementById('wageTrendLbls');
   const show=[0,Math.floor(wr.length/2),wr.length-1];
-  lblEl.innerHTML=wr.map((_,i)=>show.includes(i)?`<span style="font-size:9px;color:var(--textl)">${wr[i].date.slice(5)}</span>`:'<span></span>').join('');
+  lblEl.innerHTML=wr.map((_,i)=>
+    show.includes(i)?`<span style="font-size:9px;color:var(--textl)">${wr[i].date.slice(5)}</span>`:'<span></span>'
+  ).join('');
 }
 
 function renderTaxInfo(recs){
