@@ -1162,8 +1162,13 @@ function save(){localStorage.setItem('kfp_records',JSON.stringify(records));rend
 function openEditWork(id){
   const r=records.find(x=>x.id===id);if(!r)return;
   const ewp=document.getElementById('ewPlace');
-  ewp.innerHTML=cfg.workplaces.map(w=>`<option value="${w.name}" ${w.name===r.place?'selected':''}>${w.name}</option>`).join('');
-  document.getElementById('editId').value=id;
+  const wpNames=cfg.workplaces.map(w=>w.name);
+  let opts=cfg.workplaces.map(w=>`<option value="${w.name}" ${w.name===r.place?'selected':''}>${w.name}</option>`).join('');
+  if(r.place&&!wpNames.includes(r.place)){
+    opts=`<option value="${r.place}" selected>${r.place} (이전)</option>`+opts;
+  }
+  ewp.innerHTML=opts;
+  document.getElementById('editId').value=String(id);
   document.getElementById('ewDate').value=r.date;
   document.getElementById('ewH').value=r.hours;
   document.getElementById('ewM').value=r.mins;
@@ -1187,7 +1192,11 @@ function calcEW(){
 }
 function toggleECB(id){const cb=document.getElementById(id);cb.checked=!cb.checked;calcEW();}
 function updateWork(){
-  const id=parseInt(document.getElementById('editId').value);
+  const idStr=document.getElementById('editId').value;
+  const id=parseInt(idStr,10);
+  if(!idStr||isNaN(id)){showToast('오류: 항목을 찾을 수 없어요');return;}
+  const idx=records.findIndex(r=>r.id===id);
+  if(idx<0){showToast('오류: 기록을 찾을 수 없어요');return;}
   const h=parseFloat(document.getElementById('ewH').value)||0;
   const m=parseFloat(document.getElementById('ewM').value)||0;
   const hol=document.getElementById('ewHol').checked;
@@ -1196,8 +1205,17 @@ function updateWork(){
   if(h===0&&m===0){showToast('근무시간을 입력해주세요');return;}
   let rate=dr;if(hol)rate=dr*(cfg.ph/100);
   const ewDate=document.getElementById('ewDate').value;
-  const gross=(h+m/60)*rate;const tax=calcTax(gross,ewDate);const superAmt=calcSuper(gross);if(idx<0)return;
-  records[idx]={...records[idx],date:document.getElementById('ewDate').value,place:document.getElementById('ewPlace').value||'미정',hours:h,mins:m,holiday:hol,support:sup,dailyRate:dr,appliedRate:rate,gross,tax,net:gross-tax,superAmt,memo:document.getElementById('ewMemo').value};
+  const gross=(h+m/60)*rate;
+  const tax=calcTax(gross,ewDate);
+  const superAmt=calcSuper(gross);
+  records[idx]={...records[idx],
+    date:ewDate,
+    place:document.getElementById('ewPlace').value||'미정',
+    hours:h,mins:m,holiday:hol,support:sup,
+    dailyRate:dr,appliedRate:rate,
+    gross,tax,net:gross-tax,superAmt,
+    memo:document.getElementById('ewMemo').value
+  };
   save();closeM('mEditWork');showToast('수정 완료!');
 }
 
@@ -1554,67 +1572,101 @@ function renderEffChart(recs){
 function renderWageTrend(){
   const svg=document.getElementById('wageSvg');
   const wr=records.filter(r=>r.type==='work'&&r.dailyRate).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(-24);
-  if(wr.length<2){svg.innerHTML='<text x="180" y="50" text-anchor="middle" font-size="11" fill="#A08870">데이터 부족 (근무 2개 이상 필요)</text>';return;}
+  if(wr.length<2){
+    svg.innerHTML='<text x="180" y="50" text-anchor="middle" font-size="11" fill="#A08870">데이터 부족 (근무 2개 이상 필요)</text>';
+    document.getElementById('wageTrendLbls').innerHTML='';
+    return;
+  }
+
   const rates=wr.map(r=>r.dailyRate);
-  const minR=Math.min(...rates)-2,maxR=Math.max(...rates)+2;
-  const W=360,H=90,P=14;
-  const xs=wr.map((_,i)=>P+(i/(wr.length-1))*(W-P*2));
-  const ys=rates.map(r=>H-P-(r-minR)/(maxR-minR)*(H-P*2));
+  const minR=Math.min(...rates)-2;
+  const maxR=Math.max(...rates)+2;
+  const W=360,H=90,P=20;
+  const toX=i=>P+(i/(wr.length-1))*(W-P*2);
+  const toY=v=>H-P-(v-minR)/(maxR-minR)*(H-P*2);
 
-  // 본 파트: 갈색(camel), 지원 파트: 하늘색(sky) — 범례와 일치하게
-  // 연속된 구간별로 path 분리 (support 체크 기준)
-  let mainPaths=[], supPaths=[];
-  let curMain='', curSup='';
-  wr.forEach((r,i)=>{
-    const pt=`${i===0?'M':'L'} ${xs[i]} ${ys[i]}`;
-    if(r.support){
-      if(curMain){mainPaths.push(curMain);curMain='';}
-      curSup+=(curSup?` L ${xs[i]} ${ys[i]}`:`M ${xs[i]} ${ys[i]}`);
+  // 1) 각 점의 좌표
+  const pts=wr.map((r,i)=>({x:toX(i),y:toY(r.dailyRate),sup:!!r.support,rate:r.dailyRate,date:r.date}));
+
+  // 2) 본 파트 선 — support=false인 점들만 연속 구간으로 연결
+  let mainSvg='';
+  let seg=[];
+  pts.forEach((p,i)=>{
+    if(!p.sup){
+      seg.push(p);
     } else {
-      if(curSup){supPaths.push(curSup);curSup='';}
-      curMain+=(curMain?` L ${xs[i]} ${ys[i]}`:`M ${xs[i]} ${ys[i]}`);
+      if(seg.length>=2){
+        const d=seg.map((s,j)=>`${j===0?'M':'L'} ${s.x} ${s.y}`).join(' ');
+        mainSvg+=`<path d="${d}" fill="none" stroke="#B8906A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+      }
+      seg=[];
     }
   });
-  if(curMain) mainPaths.push(curMain);
-  if(curSup) supPaths.push(curSup);
+  if(seg.length>=2){
+    const d=seg.map((s,j)=>`${j===0?'M':'L'} ${s.x} ${s.y}`).join(' ');
+    mainSvg+=`<path d="${d}" fill="none" stroke="#B8906A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+  }
 
-  // 주간 평균선 — 본 파트만, 주별로 분리해서 독립적으로
-  const wkMap={};
-  wr.forEach((r,i)=>{
-    if(!r.support){
-      const wk=getWK(r.date);
-      if(!wkMap[wk]) wkMap[wk]=[];
-      wkMap[wk].push({rate:r.dailyRate,i});
+  // 3) 지원 파트 선 — support=true인 점들만 연속 구간으로 연결
+  let supSvg='';
+  let sseg=[];
+  pts.forEach((p)=>{
+    if(p.sup){
+      sseg.push(p);
+    } else {
+      if(sseg.length>=2){
+        const d=sseg.map((s,j)=>`${j===0?'M':'L'} ${s.x} ${s.y}`).join(' ');
+        supSvg+=`<path d="${d}" fill="none" stroke="#7AAABF" stroke-width="2.5" stroke-dasharray="5,3" stroke-linecap="round"/>`;
+      }
+      sseg=[];
     }
   });
-  let avgLines='';
-  Object.entries(wkMap).forEach(([wk,items])=>{
-    if(!items.length) return;
-    const avg=items.reduce((s,x)=>s+x.rate,0)/items.length;
-    const ay=H-P-(avg-minR)/(maxR-minR)*(H-P*2);
-    const x1=xs[items[0].i];
-    const x2=xs[items[items.length-1].i];
-    avgLines+=`<line x1="${x1}" y1="${ay}" x2="${x2}" y2="${ay}" stroke="#C8960A" stroke-width="2" stroke-dasharray="5,3" opacity="0.85"/>`;
+  if(sseg.length>=2){
+    const d=sseg.map((s,j)=>`${j===0?'M':'L'} ${s.x} ${s.y}`).join(' ');
+    supSvg+=`<path d="${d}" fill="none" stroke="#7AAABF" stroke-width="2.5" stroke-dasharray="5,3" stroke-linecap="round"/>`;
+  }
+
+  // 4) 주간 평균선 — 본 파트만, 주별로 완전히 분리
+  const wkBuckets={};
+  pts.forEach((p,i)=>{
+    if(!p.sup){
+      const wk=getWK(p.date);
+      if(!wkBuckets[wk]) wkBuckets[wk]=[];
+      wkBuckets[wk].push({...p,i});
+    }
+  });
+  let avgSvg='';
+  Object.values(wkBuckets).forEach(bucket=>{
+    if(!bucket.length) return;
+    const avg=bucket.reduce((s,p)=>s+p.rate,0)/bucket.length;
+    const ay=toY(avg);
+    const x1=bucket[0].x;
+    const x2=bucket[bucket.length-1].x;
+    // 점이 하나뿐이면 짧은 선으로 표시
+    const dx=Math.max(x2-x1, 12);
+    avgSvg+=`<line x1="${x1}" y1="${ay}" x2="${x1+dx}" y2="${ay}" stroke="#C8960A" stroke-width="2" stroke-dasharray="5,3" opacity="0.9"/>`;
   });
 
-  // 점: 본 파트=갈색, 지원=하늘색
-  const dots=wr.map((r,i)=>
-    `<circle cx="${xs[i]}" cy="${ys[i]}" r="3.5" fill="${r.support?'#7AAABF':'#B8906A'}" stroke="#fff" stroke-width="1.5"/>`
+  // 5) 점 (본=갈색, 지원=하늘색)
+  const dotsSvg=pts.map(p=>
+    `<circle cx="${p.x}" cy="${p.y}" r="4" fill="${p.sup?'#7AAABF':'#B8906A'}" stroke="#fff" stroke-width="2"/>`
   ).join('');
 
-  svg.innerHTML=`
-    ${mainPaths.map(p=>`<path d="${p}" fill="none" stroke="#B8906A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}
-    ${supPaths.map(p=>`<path d="${p}" fill="none" stroke="#7AAABF" stroke-width="2.5" stroke-dasharray="6,3" stroke-linecap="round"/>`).join('')}
-    ${avgLines}
-    ${dots}
-    <text x="${P}" y="${H-2}" font-size="9" fill="#A08870">$${minR.toFixed(0)}</text>
-    <text x="${P}" y="${P+8}" font-size="9" fill="#A08870">$${maxR.toFixed(0)}</text>`;
+  // 6) Y축 레이블
+  const yLabels=`
+    <text x="${P-2}" y="${toY(minR)+4}" font-size="9" fill="#A08870" text-anchor="end">$${Math.round(minR)}</text>
+    <text x="${P-2}" y="${toY(maxR)+4}" font-size="9" fill="#A08870" text-anchor="end">$${Math.round(maxR)}</text>
+  `;
 
-  // 날짜 라벨 — 처음/중간/마지막
+  svg.innerHTML=`${mainSvg}${supSvg}${avgSvg}${dotsSvg}${yLabels}`;
+
+  // 7) X축 날짜 라벨
   const lblEl=document.getElementById('wageTrendLbls');
-  const show=[0,Math.floor(wr.length/2),wr.length-1];
+  const show=new Set([0, Math.floor(wr.length/2), wr.length-1]);
   lblEl.innerHTML=wr.map((_,i)=>
-    show.includes(i)?`<span style="font-size:9px;color:var(--textl)">${wr[i].date.slice(5)}</span>`:'<span></span>'
+    show.has(i)
+      ?`<span style="font-size:9px;color:var(--textl)">${wr[i].date.slice(5)}</span>`
+      :'<span></span>'
   ).join('');
 }
 
