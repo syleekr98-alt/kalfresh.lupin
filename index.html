@@ -607,7 +607,7 @@ body {
   <div class="hdr-top">
     <div class="logo-area">
       <h1>🌽 칼프루팡</h1>
-      <p>made by LSY</p>
+      <p>나의 호주 워홀 기록장</p>
     </div>
     <div class="hdr-rate" onclick="toggleCurrency()">
       <div class="rl">AUD/KRW</div>
@@ -752,14 +752,13 @@ body {
     <div class="card"><h3>⚡ 파트별 실질 시급 순위</h3><div id="effChart"></div></div>
 
     <div class="card">
-      <h3>📉 일별 시급 트렌드</h3>
-      <div class="lchart-wrap"><svg class="lchart-svg" id="wageSvg" viewBox="0 0 360 95" preserveAspectRatio="none"></svg></div>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px">
-        <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--textm)"><div style="width:12px;height:4px;background:var(--sky-dark);border-radius:2px"></div>본 파트</div>
-        <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--textm)"><div style="width:12px;height:4px;background:var(--camel);border-radius:2px"></div>지원 파트</div>
-        <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--textm)"><div style="width:12px;height:4px;background:var(--gold);border-radius:2px"></div>주간 평균</div>
+      <h3>📊 일별 시급 현황</h3>
+      <div id="wageBars" style="display:flex;flex-direction:column;gap:7px"></div>
+      <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--textm)"><div style="width:12px;height:12px;background:var(--camel);border-radius:3px"></div>본 파트</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--textm)"><div style="width:12px;height:12px;background:var(--sky-dark);border-radius:3px"></div>지원 파트</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--textm)"><div style="width:3px;height:12px;background:var(--gold);border-radius:2px"></div>최저시급</div>
       </div>
-      <div id="wageTrendLbls" style="display:flex;justify-content:space-between;margin-top:5px"></div>
     </div>
 
     <div class="tax-card"><h3>🇦🇺 세금 정보 (이번달)</h3><div id="taxRows"></div></div>
@@ -1570,104 +1569,34 @@ function renderEffChart(recs){
 }
 
 function renderWageTrend(){
-  const svg=document.getElementById('wageSvg');
-  const wr=records.filter(r=>r.type==='work'&&r.dailyRate).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(-24);
-  if(wr.length<2){
-    svg.innerHTML='<text x="180" y="50" text-anchor="middle" font-size="11" fill="#A08870">데이터 부족 (근무 2개 이상 필요)</text>';
-    document.getElementById('wageTrendLbls').innerHTML='';
+  const el=document.getElementById('wageBars');
+  if(!el) return;
+  const wr=records.filter(r=>r.type==='work'&&r.dailyRate)
+    .sort((a,b)=>new Date(b.date)-new Date(a.date))
+    .slice(0,14); // 최근 14개
+  if(!wr.length){
+    el.innerHTML='<p style="font-size:12px;color:var(--textl);text-align:center;padding:12px 0">근무 기록 없음</p>';
     return;
   }
-
-  const rates=wr.map(r=>r.dailyRate);
-  const minR=Math.min(...rates)-2;
-  const maxR=Math.max(...rates)+2;
-  const W=360,H=90,P=20;
-  const toX=i=>P+(i/(wr.length-1))*(W-P*2);
-  const toY=v=>H-P-(v-minR)/(maxR-minR)*(H-P*2);
-
-  // 1) 각 점의 좌표
-  const pts=wr.map((r,i)=>({x:toX(i),y:toY(r.dailyRate),sup:!!r.support,rate:r.dailyRate,date:r.date}));
-
-  // 2) 본 파트 선 — support=false인 점들만 연속 구간으로 연결
-  let mainSvg='';
-  let seg=[];
-  pts.forEach((p,i)=>{
-    if(!p.sup){
-      seg.push(p);
-    } else {
-      if(seg.length>=2){
-        const d=seg.map((s,j)=>`${j===0?'M':'L'} ${s.x} ${s.y}`).join(' ');
-        mainSvg+=`<path d="${d}" fill="none" stroke="#B8906A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
-      }
-      seg=[];
-    }
-  });
-  if(seg.length>=2){
-    const d=seg.map((s,j)=>`${j===0?'M':'L'} ${s.x} ${s.y}`).join(' ');
-    mainSvg+=`<path d="${d}" fill="none" stroke="#B8906A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
-  }
-
-  // 3) 지원 파트 선 — support=true인 점들만 연속 구간으로 연결
-  let supSvg='';
-  let sseg=[];
-  pts.forEach((p)=>{
-    if(p.sup){
-      sseg.push(p);
-    } else {
-      if(sseg.length>=2){
-        const d=sseg.map((s,j)=>`${j===0?'M':'L'} ${s.x} ${s.y}`).join(' ');
-        supSvg+=`<path d="${d}" fill="none" stroke="#7AAABF" stroke-width="2.5" stroke-dasharray="5,3" stroke-linecap="round"/>`;
-      }
-      sseg=[];
-    }
-  });
-  if(sseg.length>=2){
-    const d=sseg.map((s,j)=>`${j===0?'M':'L'} ${s.x} ${s.y}`).join(' ');
-    supSvg+=`<path d="${d}" fill="none" stroke="#7AAABF" stroke-width="2.5" stroke-dasharray="5,3" stroke-linecap="round"/>`;
-  }
-
-  // 4) 주간 평균선 — 본 파트만, 주별로 완전히 분리
-  const wkBuckets={};
-  pts.forEach((p,i)=>{
-    if(!p.sup){
-      const wk=getWK(p.date);
-      if(!wkBuckets[wk]) wkBuckets[wk]=[];
-      wkBuckets[wk].push({...p,i});
-    }
-  });
-  let avgSvg='';
-  Object.values(wkBuckets).forEach(bucket=>{
-    if(!bucket.length) return;
-    const avg=bucket.reduce((s,p)=>s+p.rate,0)/bucket.length;
-    const ay=toY(avg);
-    const x1=bucket[0].x;
-    const x2=bucket[bucket.length-1].x;
-    // 점이 하나뿐이면 짧은 선으로 표시
-    const dx=Math.max(x2-x1, 12);
-    avgSvg+=`<line x1="${x1}" y1="${ay}" x2="${x1+dx}" y2="${ay}" stroke="#C8960A" stroke-width="2" stroke-dasharray="5,3" opacity="0.9"/>`;
-  });
-
-  // 5) 점 (본=갈색, 지원=하늘색)
-  const dotsSvg=pts.map(p=>
-    `<circle cx="${p.x}" cy="${p.y}" r="4" fill="${p.sup?'#7AAABF':'#B8906A'}" stroke="#fff" stroke-width="2"/>`
-  ).join('');
-
-  // 6) Y축 레이블
-  const yLabels=`
-    <text x="${P-2}" y="${toY(minR)+4}" font-size="9" fill="#A08870" text-anchor="end">$${Math.round(minR)}</text>
-    <text x="${P-2}" y="${toY(maxR)+4}" font-size="9" fill="#A08870" text-anchor="end">$${Math.round(maxR)}</text>
-  `;
-
-  svg.innerHTML=`${mainSvg}${supSvg}${avgSvg}${dotsSvg}${yLabels}`;
-
-  // 7) X축 날짜 라벨
-  const lblEl=document.getElementById('wageTrendLbls');
-  const show=new Set([0, Math.floor(wr.length/2), wr.length-1]);
-  lblEl.innerHTML=wr.map((_,i)=>
-    show.has(i)
-      ?`<span style="font-size:9px;color:var(--textl)">${wr[i].date.slice(5)}</span>`
-      :'<span></span>'
-  ).join('');
+  const maxRate=Math.max(...wr.map(r=>r.dailyRate), cfg.wage)+5;
+  const minRate=cfg.wage; // 최저시급 기준선
+  const html=wr.map(r=>{
+    const pct=Math.min(100,(r.dailyRate/maxRate)*100);
+    const minPct=Math.min(100,(minRate/maxRate)*100);
+    const isSupport=r.support;
+    const barColor=isSupport?'var(--sky-dark)':'var(--camel)';
+    const aboveMin=r.dailyRate>=minRate;
+    return `<div style="display:flex;align-items:center;gap:10px">
+      <div style="width:52px;font-size:10px;font-weight:700;color:var(--textl);flex-shrink:0;text-align:right">${r.date.slice(5)}</div>
+      <div style="flex:1;position:relative;height:22px;background:var(--powder);border-radius:6px;overflow:visible">
+        <div style="height:100%;width:${pct}%;background:${barColor};border-radius:6px;transition:width 0.4s ease;opacity:${aboveMin?1:0.7}"></div>
+        <!-- 최저시급 기준선 -->
+        <div style="position:absolute;top:-3px;bottom:-3px;left:${minPct}%;width:2px;background:var(--gold);border-radius:1px;opacity:0.9"></div>
+      </div>
+      <div style="width:48px;font-size:12px;font-weight:800;color:${aboveMin?'var(--camel)':'var(--red)'};flex-shrink:0">$${r.dailyRate}</div>
+    </div>`;
+  }).join('');
+  el.innerHTML=html;
 }
 
 function renderTaxInfo(recs){
