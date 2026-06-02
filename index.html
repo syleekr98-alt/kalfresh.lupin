@@ -1019,7 +1019,7 @@ function renderWpList(){
   if(!cfg.workplaces.length){el.innerHTML='<div style="padding:12px 16px;font-size:12px;color:var(--textl)">근무지 없음</div>';return;}
   el.innerHTML=cfg.workplaces.map(w=>`
     <div class="wp-item">
-      <div class="wp-item-top"><span class="wp-item-name">🌽 ${w.name}</span><button class="wp-item-del" onclick="removeWP('${w.name.replace(/'/g,"\\'")}')">✕</button></div>
+      <div class="wp-item-top"><span class="wp-item-name"> ${w.name}</span><button class="wp-item-del" onclick="removeWP('${w.name.replace(/'/g,"\\'")}')">✕</button></div>
       <div class="wp-item-wage"><label>기본 시급 (0=전역 설정)</label><input type="number" value="${w.wage||''}" placeholder="${cfg.wage}" step="0.01" oninput="updateWpWage('${w.name.replace(/'/g,"\\'")}',this.value)"></div>
     </div>`).join('');
 }
