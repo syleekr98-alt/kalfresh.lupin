@@ -200,7 +200,7 @@ body {
 .btab.active .bi { transform:scale(1.15) }
 
 /* ── PAGES ── */
-.page { display:none;padding:0 0 90px;animation:fi 0.18s ease }
+.page { display:none;padding:0 0 calc(90px + env(safe-area-inset-bottom, 0px));animation:fi 0.18s ease }
 .page.active { display:block }
 @keyframes fi { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
 
@@ -712,19 +712,16 @@ body {
 <div class="page" id="page-stats">
   <div class="main-content">
     <div class="pull-handle"></div>
-    <!-- 기간 탭 -->
     <div class="hist-switcher" style="margin:0 16px 4px">
       <button id="stab-month" class="active" onclick="setStatMode('month')">이번달</button>
       <button id="stab-thisweek" onclick="setStatMode('thisweek')">이번주</button>
       <button id="stab-lastweek" onclick="setStatMode('lastweek')">저번주</button>
     </div>
-    <!-- 월 이동 (이번달 모드일 때만 보임) -->
     <div class="mnav" id="statMnav">
       <button onclick="prevSM()">◀</button>
       <span id="sMonthLbl"></span>
       <button onclick="nextSM()">▶</button>
     </div>
-    <!-- 이번주/저번주 기간 표시 -->
     <div id="statWeekLbl" style="display:none;text-align:center;padding:10px 0 4px;font-size:14px;font-weight:800;color:var(--textm)"></div>
     <div class="sboxes">
       <div class="sbox"><div class="sl">세전 수입</div><div class="sv" id="stGross">$0</div></div>
@@ -789,13 +786,13 @@ body {
 
     <div class="set-group">
       <div class="set-group-title">근무 설정</div>
-      <div class="setrow"><div><div class="sn">기본 시급 (AUD)</div><div class="ss">파트별 미설정시 사용</div></div><input type="number" id="sWage" value="30.36" step="0.01" oninput="saveSetting()"></div>
+      <div class="setrow"><div><div class="sn">기본 시급 (AUD)</div><div class="ss">파트별 미설정시 사용</div></div><input type="number" id="sWage" value="32.19" step="0.01" oninput="saveSetting()"></div>
       <div class="setrow"><div><div class="sn">홀리데이 페이 (%)</div><div class="ss">기본 17.5%</div></div><input type="number" id="sHoliday" value="17.5" step="0.1" oninput="saveSetting()"></div>
       <div class="setrow"><div><div class="sn">공휴일 페널티</div><div class="ss">QLD 기준</div></div>
         <select id="sPH" onchange="saveSetting()"><option value="225">2.25배 (QLD)</option><option value="200">2배</option><option value="250">2.5배</option></select>
       </div>
       <div class="setrow"><div><div class="sn">TFN 상태</div><div class="ss">세율 결정</div></div>
-        <select id="sTFN" onchange="saveSetting()"><option value="tfn">TFN 있음 (15%)</option><option value="notfn">TFN 없음 (45%)</option><option value="resi">거주자 (누진세)</option></select>
+        <select id="sTFN" onchange="saveSetting()"><option value="tfn">TFN 있음 (15%)</option><option value="notfn">TFN 없음 (30%)</option><option value="resi">거주자 (누진세)</option></select>
       </div>
       <div class="setrow"><div><div class="sn">연금율 Super (%)</div><div class="ss">현행 11.5%</div></div><input type="number" id="sSuperRate" value="11.5" step="0.1" oninput="saveSetting()"></div>
     </div>
@@ -930,7 +927,7 @@ body {
 // ── STATE ──
 let records = JSON.parse(localStorage.getItem('kfp_records')||'[]');
 let cfg = JSON.parse(localStorage.getItem('kfp_cfg')||JSON.stringify({
-  wage:30.36,holiday:17.5,ph:225,tfn:'tfn',superRate:11.5,
+  wage:32.19,holiday:17.5,ph:225,tfn:'tfn',superRate:11.5,
   workplaces:[{name:'옥수수 파트',wage:0},{name:'콩 파트',wage:0},{name:'카페',wage:0}],
   categories:['식비','교통','쇼핑','숙박','의료','통신','여행','기타'],
   goalAmt:0,goalDate:'',goalType:'',manRate:940
@@ -951,7 +948,7 @@ function fmtS(n){return showKrw&&exchRate?`₩${Math.round(n*exchRate/1000)}K`:`
 function init(){
   const now=new Date();
   ['wDate','sDate','iDate'].forEach(id=>document.getElementById(id).value=ds(now));
-  document.getElementById('statMnav').style.display=''; // 초기엔 이번달 모드
+  document.getElementById('statMnav').style.display='';
   loadCfg();fetchRate();render();
 }
 
@@ -1040,7 +1037,7 @@ function updateExUI(manual=false){
 function toggleCurrency(){showKrw=!showKrw;render();showToast(showKrw?'원화로 표시':'달러로 표시');}
 
 function calcTax(gross){
-  if(cfg.tfn==='notfn')return gross*0.45;
+  if(cfg.tfn==='notfn')return gross*0.30;
   if(cfg.tfn==='resi'){const a=gross*52;let t=0;if(a>180000)t=51667+(a-180000)*0.45;else if(a>120000)t=29467+(a-120000)*0.37;else if(a>45000)t=5092+(a-45000)*0.325;else if(a>18200)t=(a-18200)*0.19;return t/52;}
   return gross*0.15;
 }
@@ -1049,7 +1046,30 @@ function calcSuper(gross){return gross*(cfg.superRate||11.5)/100;}
 function getWK(dateStr){const d=new Date(dateStr);const day=d.getDay();const diff=d.getDate()-(day===0?6:day-1);const mon=new Date(d);mon.setDate(diff);return toDS(mon);}
 function wkLabel(dateStr){const d=new Date(dateStr);return `${d.getMonth()+1}/${d.getDate()}`;}
 
-function calcW(){
+// ── 컨츄랙 주급 계산 ──
+// 본파트 기록 배열을 받아 해당 주의 실질 주급을 계산
+// - 평균 컨츄랙 >= 최저시급 → 평균시급 × 총시간
+// - 평균 컨츄랙 < 최저시급  → 최저시급 × (총시간 - 0.5h × 일수)
+function calcWeeklyPay(mainRecs){
+  if(!mainRecs.length)return{pay:0,avgRate:0,effHours:0,mode:''};
+  const minWage=cfg.wage;
+  const avgRate=mainRecs.reduce((s,r)=>s+r.dailyRate,0)/mainRecs.length;
+  const totalHours=mainRecs.reduce((s,r)=>s+r.hours+r.mins/60,0);
+  const dayCount=mainRecs.length;
+  if(avgRate>=minWage){
+    return{pay:avgRate*totalHours,avgRate,effHours:totalHours,mode:'contract'};
+  } else {
+    const effHours=Math.max(totalHours-0.5*dayCount,0);
+    return{pay:minWage*effHours,avgRate,effHours,mode:'minimum'};
+  }
+}
+
+// records 전체에서 특정 주의 본파트 레코드 가져오기
+function getWeekMainRecs(wkKey,allRecs){
+  return allRecs.filter(x=>x.type==='work'&&!x.support&&getWK(x.date)===wkKey);
+}
+
+
   const h=parseFloat(document.getElementById('wH').value)||0;
   const m=parseFloat(document.getElementById('wM').value)||0;
   const hol=document.getElementById('wHol').checked;
@@ -1290,7 +1310,7 @@ function itemHTML(r,section=false){
     icon=r.support?'🔀':'⏱️';icocls=r.support?'support-ico':'work';
     label=r.place||'근무';
     sub=`${r.date} · ${r.hours}h ${r.mins}m · $${r.dailyRate}/h${r.holiday?' 🎉':''}${r.memo?' · '+r.memo:''}`;
-    amt=fmtA(r.net);amtCls='pos';
+    amt=fmtA(r.gross);amtCls='pos';
     return `<div class="tx-item${r.support?' support':''}">
       <div class="tx-ico ${icocls}">${icon}</div>
       <div class="tx-body"><div class="tn">${label}${supBadge}</div><div class="ts">${sub}</div></div>
@@ -1343,11 +1363,13 @@ function renderHistory(){
         flush();lastWk=wk;
         const wRecs=weekMap[wk];
         const mainRecs=wRecs.filter(x=>!x.support);
-        const avg=mainRecs.length>0?mainRecs.map(x=>x.dailyRate).reduce((s,v)=>s+v,0)/mainRecs.length:0;
-        const totalNet=wRecs.reduce((s,x)=>s+x.net,0);
+        const {pay:weeklyPay,avgRate,effHours,mode}=calcWeeklyPay(mainRecs);
+        const supPay=wRecs.filter(x=>x.support).reduce((s,x)=>s+x.gross,0);
+        const totalPay=weeklyPay+supPay;
         const d=new Date(wk);const end=new Date(wk);end.setDate(end.getDate()+6);
         const supCount=wRecs.filter(x=>x.support).length;
-        html+=`<div class="wk-label"><span class="wl">📅 ${d.getMonth()+1}/${d.getDate()} ~ ${end.getMonth()+1}/${end.getDate()}</span><span class="wr">${avg>0?`avg $${avg.toFixed(2)}/h`:''} · 주급 $${totalNet.toFixed(2)}${supCount>0?` · 지원 ${supCount}회`:''}</span></div>`;
+        const modeTag=mode==='minimum'?` <span style="font-size:9px;color:var(--sky-dark)">[최저]</span>`:'';
+        html+=`<div class="wk-label"><span class="wl">📅 ${d.getMonth()+1}/${d.getDate()} ~ ${end.getMonth()+1}/${end.getDate()}</span><span class="wr">${avgRate>0?`avg $${avgRate.toFixed(2)}/h`:''} · 주급 $${totalPay.toFixed(2)}${modeTag}${supCount>0?` · 지원 ${supCount}회`:''}</span></div>`;
       }
       sectionItems.push(itemHTML(r));
     } else {flush();lastWk='';html+=`<div class="tx-section" style="margin:0 16px 8px">${itemHTML(r)}</div>`;}
@@ -1405,7 +1427,7 @@ function getWeekRange(offsetWeeks){
   const day=now.getDay(),diff=now.getDate()-(day===0?6:day-1);
   const mon=new Date(now);mon.setDate(diff-(offsetWeeks*7));
   const sun=new Date(mon);sun.setDate(mon.getDate()+6);
-  return {s:toDS(mon),e:toDS(sun)};
+  return{s:toDS(mon),e:toDS(sun)};
 }
 function setStatMode(mode){
   statMode=mode;
@@ -1418,31 +1440,41 @@ function setStatMode(mode){
 function renderStats(){
   let recs,periodLabel;
   if(statMode==='thisweek'){
-    const {s,e}=getWeekRange(0);
+    const{s,e}=getWeekRange(0);
     recs=records.filter(r=>r.date>=s&&r.date<=e);
     const sm=new Date(s),em=new Date(e);
     periodLabel=`${sm.getMonth()+1}/${sm.getDate()} ~ ${em.getMonth()+1}/${em.getDate()}`;
+    document.getElementById('statWeekLbl').textContent=periodLabel;
   } else if(statMode==='lastweek'){
-    const {s,e}=getWeekRange(1);
+    const{s,e}=getWeekRange(1);
     recs=records.filter(r=>r.date>=s&&r.date<=e);
     const sm=new Date(s),em=new Date(e);
     periodLabel=`${sm.getMonth()+1}/${sm.getDate()} ~ ${em.getMonth()+1}/${em.getDate()}`;
+    document.getElementById('statWeekLbl').textContent=periodLabel;
   } else {
     recs=getMRecs(sY,sM);
     periodLabel=ml(sY,sM);
   }
   document.getElementById('sMonthLbl').textContent=periodLabel;
-  if(statMode!=='month'){
-    document.getElementById('statWeekLbl').textContent=periodLabel;
-  }
   const grossPretax=recs.filter(r=>r.type==='work').reduce((s,r)=>s+r.gross,0)+recs.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
   const spend=recs.filter(r=>r.type==='spend').reduce((s,r)=>s+r.amount,0);
   const hours=recs.filter(r=>r.type==='work').reduce((s,r)=>s+r.hours+r.mins/60,0);
-  const netIncome=recs.filter(r=>r.type==='work').reduce((s,r)=>s+r.net,0)+recs.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
+  // 주급 계산: 주별로 묶어 컨츄랙 규칙 적용
+  const wkSet={};
+  recs.filter(r=>r.type==='work').forEach(r=>{const wk=getWK(r.date);if(!wkSet[wk])wkSet[wk]=[];wkSet[wk].push(r);});
+  let contractIncome=0;
+  Object.entries(wkSet).forEach(([wk,wRecs])=>{
+    const mainRecs=wRecs.filter(x=>!x.support);
+    const{pay}=calcWeeklyPay(mainRecs);
+    const supPay=wRecs.filter(x=>x.support).reduce((s,x)=>s+x.gross,0);
+    contractIncome+=pay+supPay;
+  });
+  const otherIncome=recs.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
+  const totalNet=contractIncome+otherIncome-spend;
   document.getElementById('stGross').textContent=fmtA(grossPretax);
   document.getElementById('stSpend').textContent=fmtA(spend);
   document.getElementById('stHours').textContent=`${Math.floor(hours)}h`;
-  document.getElementById('stNet').textContent=fmtA(netIncome-spend);
+  document.getElementById('stNet').textContent=fmtA(totalNet);
   renderGoal();renderEffChart(recs);renderWageTrend();renderTaxInfo(recs);renderTaxReturn();renderWkCharts();
 }
 
@@ -1473,30 +1505,44 @@ function renderWageTrend(){
   const wr=records.filter(r=>r.type==='work'&&r.dailyRate).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(-24);
   if(wr.length<2){svg.innerHTML='<text x="180" y="50" text-anchor="middle" font-size="11" fill="#A08870">데이터 부족 (근무 2개 이상 필요)</text>';return;}
   const rates=wr.map(r=>r.dailyRate);
-  const minR=Math.min(...rates)-2,maxR=Math.max(...rates)+2;
-  const W=360,H=90,P=14;
+  const rawMin=Math.min(...rates),rawMax=Math.max(...rates);
+  const pad=rawMax===rawMin?2:Math.max((rawMax-rawMin)*0.15,1);
+  const minR=rawMin-pad,maxR=rawMax+pad;
+  const W=360,H=90,P=18;
+  const range=maxR-minR||1;
   const xs=wr.map((_,i)=>P+(i/(wr.length-1))*(W-P*2));
-  const ys=rates.map(r=>H-P-(r-minR)/(maxR-minR)*(H-P*2));
+  const ys=rates.map(r=>H-P-((r-minR)/range)*(H-P*2));
+  // 본파트/지원파트 각각 path 생성
   let mainPath='',supPath='';
-  wr.forEach((r,i)=>{const cmd=i===0||wr[i-1].support!==r.support?`M ${xs[i]} ${ys[i]}`:`L ${xs[i]} ${ys[i]}`;if(r.support)supPath+=cmd;else mainPath+=cmd;});
+  let mPrev=null,sPrev=null;
+  wr.forEach((r,i)=>{
+    if(r.support){
+      supPath+=(sPrev===null?`M ${xs[i]} ${ys[i]}`:`L ${xs[i]} ${ys[i]}`);sPrev=i;
+    } else {
+      mainPath+=(mPrev===null?`M ${xs[i]} ${ys[i]}`:`L ${xs[i]} ${ys[i]}`);mPrev=i;
+    }
+  });
+  // 주간 평균선
   const wkMap={};
   wr.forEach((r,i)=>{if(!r.support){const wk=getWK(r.date);if(!wkMap[wk])wkMap[wk]=[];wkMap[wk].push({rate:r.dailyRate,i});}});
   let avgLines='';
   Object.entries(wkMap).forEach(([wk,items])=>{
     if(!items.length)return;
     const avg=items.reduce((s,x)=>s+x.rate,0)/items.length;
-    const ay=H-P-(avg-minR)/(maxR-minR)*(H-P*2);
-    avgLines+=`<line x1="${xs[items[0].i]-3}" y1="${ay}" x2="${xs[items[items.length-1].i]+3}" y2="${ay}" stroke="#C8960A" stroke-width="1.5" stroke-dasharray="4,2"/>`;
+    const ay=H-P-((avg-minR)/range)*(H-P*2);
+    const x1=xs[items[0].i];const x2=xs[items[items.length-1].i];
+    avgLines+=`<line x1="${x1}" y1="${ay}" x2="${x2===x1?x1+18:x2}" y2="${ay}" stroke="#C8960A" stroke-width="1.5" stroke-dasharray="4,2"/>`;
   });
   const dots=wr.map((r,i)=>`<circle cx="${xs[i]}" cy="${ys[i]}" r="3.5" fill="${r.support?'#7AAABF':'#B8906A'}" stroke="#fff" stroke-width="1.5"/>`).join('');
   svg.innerHTML=`
     ${mainPath?`<path d="${mainPath}" fill="none" stroke="#B8906A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`:''}
-    ${supPath?`<path d="${supPath}" fill="none" stroke="#7AAABF" stroke-width="2.5" stroke-dasharray="6,3" stroke-linecap="round"/>`:''}
+    ${supPath?`<path d="${supPath}" fill="none" stroke="#7AAABF" stroke-width="2.5" stroke-dasharray="6,3" stroke-linecap="round" stroke-linejoin="round"/>`:''}
     ${avgLines}${dots}
-    <text x="${P}" y="${H-2}" font-size="9" fill="#A08870">$${minR.toFixed(0)}</text>
-    <text x="${P}" y="${P+8}" font-size="9" fill="#A08870">$${maxR.toFixed(0)}</text>`;
+    <text x="${P}" y="${H-2}" font-size="9" fill="#A08870">$${rawMin.toFixed(2)}</text>
+    <text x="${P}" y="${P+2}" font-size="9" fill="#A08870">$${rawMax.toFixed(2)}</text>`;
   const lblEl=document.getElementById('wageTrendLbls');
-  const show=[0,Math.floor(wr.length/2),wr.length-1];
+  const n=wr.length;
+  const show=n<=4?wr.map((_,i)=>i):[0,Math.floor(n/2),n-1];
   lblEl.innerHTML=wr.map((_,i)=>show.includes(i)?`<span style="font-size:9px;color:var(--textl)">${wr[i].date.slice(5)}</span>`:'<span></span>').join('');
 }
 
@@ -1511,7 +1557,7 @@ function renderTaxInfo(recs){
     <div class="tax-row"><span class="tk">실효 세율</span><span class="tv">${rate}%</span></div>
     <div class="tax-row"><span class="tk">연금 Super ${cfg.superRate}%</span><span class="tv" style="color:#7dff7d">+$${superTotal.toFixed(2)}</span></div>
     <div class="tax-row hl"><span class="tk">세후 수령</span><span class="tv">$${(gross-tax).toFixed(2)}</span></div>
-    <div class="tax-row"><span class="tk">TFN</span><span class="tv">${cfg.tfn==='notfn'?'없음(45%)':cfg.tfn==='resi'?'거주자':'있음(15%)'}</span></div>`;
+    <div class="tax-row"><span class="tk">TFN</span><span class="tv">${cfg.tfn==='notfn'?'없음(30%)':cfg.tfn==='resi'?'거주자':'있음(15%)'}</span></div>`;
 }
 
 function renderTaxReturn(){
@@ -1521,7 +1567,7 @@ function renderTaxReturn(){
   const fyR=records.filter(r=>r.type==='work'&&r.date>=fyS&&r.date<=fyE);
   const tGross=fyR.reduce((s,r)=>s+r.gross,0);const tTax=fyR.reduce((s,r)=>s+r.tax,0);
   let actualTax=0;
-  if(cfg.tfn==='notfn')actualTax=tGross*0.45;
+  if(cfg.tfn==='notfn')actualTax=tGross*0.30;
   else if(cfg.tfn==='resi'){if(tGross>180000)actualTax=51667+(tGross-180000)*0.45;else if(tGross>120000)actualTax=29467+(tGross-120000)*0.37;else if(tGross>45000)actualTax=5092+(tGross-45000)*0.325;else if(tGross>18200)actualTax=(tGross-18200)*0.19;}
   else actualTax=tGross*0.15;
   const diff=tTax-actualTax;const isRef=diff>0;
@@ -1545,7 +1591,14 @@ function getWeeks(n){
 }
 function renderWkCharts(){
   const weeks=getWeeks(10);
-  const data=weeks.map(({s,e,lbl})=>{const wr=records.filter(r=>r.date>=s&&r.date<=e&&r.type==='work');return {lbl,hrs:wr.reduce((a,r)=>a+r.hours+r.mins/60,0),earn:wr.reduce((a,r)=>a+r.net,0)};});
+  const data=weeks.map(({s,e,lbl})=>{
+    const wr=records.filter(r=>r.date>=s&&r.date<=e&&r.type==='work');
+    const mainRecs=wr.filter(r=>!r.support);
+    const {pay:mainPay,effHours}=calcWeeklyPay(mainRecs);
+    const supPay=wr.filter(r=>r.support).reduce((a,r)=>a+r.gross,0);
+    const totalHrs=wr.reduce((a,r)=>a+r.hours+r.mins/60,0);
+    return{lbl,hrs:totalHrs,earn:mainPay+supPay};
+  });
   const maxH=Math.max(...data.map(d=>d.hrs),1);const maxE=Math.max(...data.map(d=>d.earn),1);
   const el=document.getElementById('wkChart');if(!el)return;
   el.innerHTML=data.map(d=>{
