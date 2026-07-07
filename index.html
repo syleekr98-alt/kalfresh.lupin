@@ -523,6 +523,7 @@ body {
 .wp-item-top { display:flex;align-items:center;justify-content:space-between;margin-bottom:7px }
 .wp-item-name { font-size:13px;font-weight:700 }
 .wp-item-del { background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:2px }
+.wp-item-name-input { font-size:13px;font-weight:700;background:var(--powder);border:1.5px solid var(--camel);border-radius:8px;padding:4px 8px;font-family:inherit;color:var(--text);outline:none;width:calc(100% - 36px) }
 .wp-item-wage { display:flex;align-items:center;gap:8px }
 .wp-item-wage label { font-size:11px;font-weight:700;color:var(--textl) }
 .wp-item-wage input { width:100px;background:var(--powder);border:1.5px solid var(--divider);border-radius:8px;padding:6px 8px;font-size:12px;font-family:inherit;color:var(--text);outline:none }
@@ -985,6 +986,18 @@ function addWP(){
   localStorage.setItem('kfp_cfg',JSON.stringify(cfg));
   renderWpList();updateSelects();showToast('근무지 추가!');
 }
+function renameWP(oldName,newName){
+  newName=newName.trim();
+  if(!newName||newName===oldName)return;
+  if(cfg.workplaces.find(w=>w.name===newName)){showToast('이미 있는 이름이에요!');renderWpList();return;}
+  const wp=cfg.workplaces.find(w=>w.name===oldName);
+  if(wp)wp.name=newName;
+  localStorage.setItem('kfp_cfg',JSON.stringify(cfg));
+  records.forEach(r=>{if(r.type==='work'&&r.place===oldName)r.place=newName;});
+  save();
+  renderWpList();updateSelects();render();
+  showToast(`'${newName}'으로 변경됐어요!`);
+}
 function removeWP(n){cfg.workplaces=cfg.workplaces.filter(w=>w.name!==n);localStorage.setItem('kfp_cfg',JSON.stringify(cfg));renderWpList();updateSelects();}
 function updateWpWage(name,val){const wp=cfg.workplaces.find(w=>w.name===name);if(wp)wp.wage=parseFloat(val)||0;localStorage.setItem('kfp_cfg',JSON.stringify(cfg));}
 function renderWpList(){
@@ -992,7 +1005,7 @@ function renderWpList(){
   if(!cfg.workplaces.length){el.innerHTML='<div style="padding:12px 16px;font-size:12px;color:var(--textl)">근무지 없음</div>';return;}
   el.innerHTML=cfg.workplaces.map(w=>`
     <div class="wp-item">
-      <div class="wp-item-top"><span class="wp-item-name">${w.name}</span><button class="wp-item-del" onclick="removeWP('${w.name.replace(/'/g,"\\'")}')">✕</button></div>
+      <div class="wp-item-top"><input class="wp-item-name-input" value="${w.name.replace(/"/g,'&quot;')}" data-orig="${w.name.replace(/"/g,'&quot;')}" onchange="renameWP(this.dataset.orig,this.value)" onblur="renameWP(this.dataset.orig,this.value)"><button class="wp-item-del" onclick="removeWP('${w.name.replace(/'/g,"\\'")}')">✕</button></div>
       <div class="wp-item-wage"><label>기본 시급 (0=전역 설정)</label><input type="number" value="${w.wage||''}" placeholder="${cfg.wage}" step="0.01" oninput="updateWpWage('${w.name.replace(/'/g,"\\'")}',this.value)"></div>
     </div>`).join('');
 }
