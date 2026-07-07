@@ -200,7 +200,7 @@ body {
 .btab.active .bi { transform:scale(1.15) }
 
 /* ── PAGES ── */
-.page { display:none;padding:0 0 calc(90px + env(safe-area-inset-bottom, 0px));animation:fi 0.18s ease }
+.page { display:none;padding:0 0 calc(90px + env(safe-area-inset-bottom,0px));animation:fi 0.18s ease }
 .page.active { display:block }
 @keyframes fi { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
 
@@ -936,7 +936,7 @@ let exchRate=0,showKrw=false,hFilter='all';
 let hY=new Date().getFullYear(),hM=new Date().getMonth();
 let sY=new Date().getFullYear(),sM=new Date().getMonth();
 let histViewMode='list';
-let statMode='month'; // 'month' | 'thisweek' | 'lastweek'
+let statMode='month';
 const CE={'식비':'🍜','교통':'🚌','쇼핑':'🧾','숙박':'🏠','의료':'🏥','통신':'📱','여행':'✈️','기타':'💸'};
 
 function ds(d){return d.toISOString().slice(0,10);}
@@ -1046,30 +1046,7 @@ function calcSuper(gross){return gross*(cfg.superRate||11.5)/100;}
 function getWK(dateStr){const d=new Date(dateStr);const day=d.getDay();const diff=d.getDate()-(day===0?6:day-1);const mon=new Date(d);mon.setDate(diff);return toDS(mon);}
 function wkLabel(dateStr){const d=new Date(dateStr);return `${d.getMonth()+1}/${d.getDate()}`;}
 
-// ── 컨츄랙 주급 계산 ──
-// 본파트 기록 배열을 받아 해당 주의 실질 주급을 계산
-// - 평균 컨츄랙 >= 최저시급 → 평균시급 × 총시간
-// - 평균 컨츄랙 < 최저시급  → 최저시급 × (총시간 - 0.5h × 일수)
-function calcWeeklyPay(mainRecs){
-  if(!mainRecs.length)return{pay:0,avgRate:0,effHours:0,mode:''};
-  const minWage=cfg.wage;
-  const avgRate=mainRecs.reduce((s,r)=>s+r.dailyRate,0)/mainRecs.length;
-  const totalHours=mainRecs.reduce((s,r)=>s+r.hours+r.mins/60,0);
-  const dayCount=mainRecs.length;
-  if(avgRate>=minWage){
-    return{pay:avgRate*totalHours,avgRate,effHours:totalHours,mode:'contract'};
-  } else {
-    const effHours=Math.max(totalHours-0.5*dayCount,0);
-    return{pay:minWage*effHours,avgRate,effHours,mode:'minimum'};
-  }
-}
-
-// records 전체에서 특정 주의 본파트 레코드 가져오기
-function getWeekMainRecs(wkKey,allRecs){
-  return allRecs.filter(x=>x.type==='work'&&!x.support&&getWK(x.date)===wkKey);
-}
-
-
+function calcW(){
   const h=parseFloat(document.getElementById('wH').value)||0;
   const m=parseFloat(document.getElementById('wM').value)||0;
   const hol=document.getElementById('wHol').checked;
@@ -1363,7 +1340,7 @@ function renderHistory(){
         flush();lastWk=wk;
         const wRecs=weekMap[wk];
         const mainRecs=wRecs.filter(x=>!x.support);
-        const {pay:weeklyPay,avgRate,effHours,mode}=calcWeeklyPay(mainRecs);
+        const{pay:weeklyPay,avgRate,mode}=calcWeeklyPay(mainRecs);
         const supPay=wRecs.filter(x=>x.support).reduce((s,x)=>s+x.gross,0);
         const totalPay=weeklyPay+supPay;
         const d=new Date(wk);const end=new Date(wk);end.setDate(end.getDate()+6);
@@ -1422,6 +1399,24 @@ function showCalDay(d){
   el.innerHTML=`<div style="font-size:13px;font-weight:800;color:var(--textm);padding:8px 16px">${hM+1}월 ${d}일</div><div class="tx-section" style="margin:0 16px">${recs.map(r=>itemHTML(r)).join('')}</div>`;
 }
 
+// ── 컨츄랙 주급 계산 ──
+// 본파트 기록 배열로 해당 주의 실질 주급 계산
+// 평균 컨츄랙 >= 최저시급: 평균시급 × 총시간
+// 평균 컨츄랙 <  최저시급: 최저시급 × (총시간 - 0.5h × 일수)
+function calcWeeklyPay(mainRecs){
+  if(!mainRecs.length)return{pay:0,avgRate:0,effHours:0,mode:''};
+  const minWage=cfg.wage;
+  const avgRate=mainRecs.reduce((s,r)=>s+r.dailyRate,0)/mainRecs.length;
+  const totalHours=mainRecs.reduce((s,r)=>s+r.hours+r.mins/60,0);
+  const dayCount=mainRecs.length;
+  if(avgRate>=minWage){
+    return{pay:avgRate*totalHours,avgRate,effHours:totalHours,mode:'contract'};
+  } else {
+    const effHours=Math.max(totalHours-0.5*dayCount,0);
+    return{pay:minWage*effHours,avgRate,effHours,mode:'minimum'};
+  }
+}
+
 function getWeekRange(offsetWeeks){
   const now=new Date();
   const day=now.getDay(),diff=now.getDate()-(day===0?6:day-1);
@@ -1429,6 +1424,7 @@ function getWeekRange(offsetWeeks){
   const sun=new Date(mon);sun.setDate(mon.getDate()+6);
   return{s:toDS(mon),e:toDS(sun)};
 }
+
 function setStatMode(mode){
   statMode=mode;
   document.querySelectorAll('.hist-switcher button[id^="stab-"]').forEach(b=>b.classList.remove('active'));
@@ -1437,6 +1433,7 @@ function setStatMode(mode){
   document.getElementById('statWeekLbl').style.display=(mode==='month')?'none':'';
   renderStats();
 }
+
 function renderStats(){
   let recs,periodLabel;
   if(statMode==='thisweek'){
@@ -1459,7 +1456,7 @@ function renderStats(){
   const grossPretax=recs.filter(r=>r.type==='work').reduce((s,r)=>s+r.gross,0)+recs.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
   const spend=recs.filter(r=>r.type==='spend').reduce((s,r)=>s+r.amount,0);
   const hours=recs.filter(r=>r.type==='work').reduce((s,r)=>s+r.hours+r.mins/60,0);
-  // 주급 계산: 주별로 묶어 컨츄랙 규칙 적용
+  // 주별로 묶어 컨츄랙 규칙 적용하여 순수익 계산
   const wkSet={};
   recs.filter(r=>r.type==='work').forEach(r=>{const wk=getWK(r.date);if(!wkSet[wk])wkSet[wk]=[];wkSet[wk].push(r);});
   let contractIncome=0;
@@ -1470,11 +1467,10 @@ function renderStats(){
     contractIncome+=pay+supPay;
   });
   const otherIncome=recs.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
-  const totalNet=contractIncome+otherIncome-spend;
   document.getElementById('stGross').textContent=fmtA(grossPretax);
   document.getElementById('stSpend').textContent=fmtA(spend);
   document.getElementById('stHours').textContent=`${Math.floor(hours)}h`;
-  document.getElementById('stNet').textContent=fmtA(totalNet);
+  document.getElementById('stNet').textContent=fmtA(contractIncome+otherIncome-spend);
   renderGoal();renderEffChart(recs);renderWageTrend();renderTaxInfo(recs);renderTaxReturn();renderWkCharts();
 }
 
@@ -1507,22 +1503,16 @@ function renderWageTrend(){
   const rates=wr.map(r=>r.dailyRate);
   const rawMin=Math.min(...rates),rawMax=Math.max(...rates);
   const pad=rawMax===rawMin?2:Math.max((rawMax-rawMin)*0.15,1);
-  const minR=rawMin-pad,maxR=rawMax+pad;
+  const minR=rawMin-pad,maxR=rawMax+pad,range=maxR-minR;
   const W=360,H=90,P=18;
-  const range=maxR-minR||1;
   const xs=wr.map((_,i)=>P+(i/(wr.length-1))*(W-P*2));
   const ys=rates.map(r=>H-P-((r-minR)/range)*(H-P*2));
-  // 본파트/지원파트 각각 path 생성
   let mainPath='',supPath='';
   let mPrev=null,sPrev=null;
   wr.forEach((r,i)=>{
-    if(r.support){
-      supPath+=(sPrev===null?`M ${xs[i]} ${ys[i]}`:`L ${xs[i]} ${ys[i]}`);sPrev=i;
-    } else {
-      mainPath+=(mPrev===null?`M ${xs[i]} ${ys[i]}`:`L ${xs[i]} ${ys[i]}`);mPrev=i;
-    }
+    if(r.support){supPath+=(sPrev===null?`M ${xs[i]} ${ys[i]}`:`L ${xs[i]} ${ys[i]}`);sPrev=i;}
+    else{mainPath+=(mPrev===null?`M ${xs[i]} ${ys[i]}`:`L ${xs[i]} ${ys[i]}`);mPrev=i;}
   });
-  // 주간 평균선
   const wkMap={};
   wr.forEach((r,i)=>{if(!r.support){const wk=getWK(r.date);if(!wkMap[wk])wkMap[wk]=[];wkMap[wk].push({rate:r.dailyRate,i});}});
   let avgLines='';
@@ -1530,8 +1520,8 @@ function renderWageTrend(){
     if(!items.length)return;
     const avg=items.reduce((s,x)=>s+x.rate,0)/items.length;
     const ay=H-P-((avg-minR)/range)*(H-P*2);
-    const x1=xs[items[0].i];const x2=xs[items[items.length-1].i];
-    avgLines+=`<line x1="${x1}" y1="${ay}" x2="${x2===x1?x1+18:x2}" y2="${ay}" stroke="#C8960A" stroke-width="1.5" stroke-dasharray="4,2"/>`;
+    const x1=xs[items[0].i],x2=xs[items[items.length-1].i];
+    avgLines+=`<line x1="${x1}" y1="${ay}" x2="${x2===x1?x1+20:x2}" y2="${ay}" stroke="#C8960A" stroke-width="1.5" stroke-dasharray="4,2"/>`;
   });
   const dots=wr.map((r,i)=>`<circle cx="${xs[i]}" cy="${ys[i]}" r="3.5" fill="${r.support?'#7AAABF':'#B8906A'}" stroke="#fff" stroke-width="1.5"/>`).join('');
   svg.innerHTML=`
@@ -1594,10 +1584,9 @@ function renderWkCharts(){
   const data=weeks.map(({s,e,lbl})=>{
     const wr=records.filter(r=>r.date>=s&&r.date<=e&&r.type==='work');
     const mainRecs=wr.filter(r=>!r.support);
-    const {pay:mainPay,effHours}=calcWeeklyPay(mainRecs);
+    const{pay:mainPay}=calcWeeklyPay(mainRecs);
     const supPay=wr.filter(r=>r.support).reduce((a,r)=>a+r.gross,0);
-    const totalHrs=wr.reduce((a,r)=>a+r.hours+r.mins/60,0);
-    return{lbl,hrs:totalHrs,earn:mainPay+supPay};
+    return{lbl,hrs:wr.reduce((a,r)=>a+r.hours+r.mins/60,0),earn:mainPay+supPay};
   });
   const maxH=Math.max(...data.map(d=>d.hrs),1);const maxE=Math.max(...data.map(d=>d.earn),1);
   const el=document.getElementById('wkChart');if(!el)return;
