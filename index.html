@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#8B6F5E">
@@ -189,7 +189,7 @@ body {
   background:var(--surface);
   border-top:1px solid var(--divider);
   display:flex;
-  padding:8px 0 env(safe-area-inset-bottom,12px);
+  padding:8px 0 max(12px, env(safe-area-inset-bottom, 12px));
   z-index:100;
   box-shadow:0 -4px 20px rgba(122,92,74,0.08);
 }
@@ -200,7 +200,7 @@ body {
 .btab.active .bi { transform:scale(1.15) }
 
 /* ── PAGES ── */
-.page { display:none;padding:0 0 calc(90px + env(safe-area-inset-bottom,0px));animation:fi 0.18s ease }
+.page { display:none;padding:0 0 calc(110px + env(safe-area-inset-bottom, 20px));animation:fi 0.18s ease }
 .page.active { display:block }
 @keyframes fi { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
 
@@ -741,13 +741,11 @@ body {
 
     <div class="card">
       <h3>📉 일별 시급 트렌드</h3>
-      <div class="lchart-wrap"><svg class="lchart-svg" id="wageSvg" viewBox="0 0 360 95" preserveAspectRatio="none"></svg></div>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px">
-        <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--textm)"><div style="width:12px;height:4px;background:var(--sky-dark);border-radius:2px"></div>본 파트</div>
-        <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--textm)"><div style="width:12px;height:4px;background:var(--camel);border-radius:2px"></div>지원 파트</div>
-        <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--textm)"><div style="width:12px;height:4px;background:var(--gold);border-radius:2px"></div>주간 평균</div>
+      <div id="wageTrendChart"></div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px">
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--textm)"><div style="width:10px;height:10px;background:var(--camel);border-radius:3px"></div>본 파트</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--textm)"><div style="width:10px;height:10px;background:var(--sky-dark);border-radius:3px"></div>지원 파트</div>
       </div>
-      <div id="wageTrendLbls" style="display:flex;justify-content:space-between;margin-top:5px"></div>
     </div>
 
     <div class="tax-card"><h3>🇦🇺 세금 정보 (이번달)</h3><div id="taxRows"></div></div>
@@ -1384,7 +1382,7 @@ function renderCalendar(){
   const dayMap={};
   getMRecs(hY,hM).forEach(r=>{
     const d=r.date.slice(8,10);if(!dayMap[d])dayMap[d]={earn:0,spend:0};
-    if(r.type==='work')dayMap[d].earn+=r.net;else if(r.type==='income')dayMap[d].earn+=r.amount;else if(r.type==='spend')dayMap[d].spend+=r.amount;
+    if(r.type==='work')dayMap[d].earn+=r.gross;else if(r.type==='income')dayMap[d].earn+=r.amount;else if(r.type==='spend')dayMap[d].spend+=r.amount;
   });
   const hdrs=['월','화','수','목','금','토','일'];
   let html=hdrs.map(h=>`<div class="cal-day-hdr">${h}</div>`).join('');
@@ -1480,10 +1478,11 @@ function renderStats(){
     contractIncome+=pay+supPay;
   });
   const otherIncome=recs.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
+  const netIncome=recs.filter(r=>r.type==='work').reduce((s,r)=>s+(r.gross-r.tax),0)+otherIncome;
   document.getElementById('stGross').textContent=fmtA(grossPretax);
   document.getElementById('stSpend').textContent=fmtA(spend);
   document.getElementById('stHours').textContent=`${Math.floor(hours)}h`;
-  document.getElementById('stNet').textContent=fmtA(contractIncome+otherIncome-spend);
+  document.getElementById('stNet').textContent=fmtA(netIncome-spend);
   renderGoal();renderEffChart(recs);renderWageTrend();renderTaxInfo(recs);renderTaxReturn();renderWkCharts();
 }
 
@@ -1510,43 +1509,42 @@ function renderEffChart(recs){
 }
 
 function renderWageTrend(){
-  const svg=document.getElementById('wageSvg');
-  const wr=records.filter(r=>r.type==='work'&&r.dailyRate).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(-24);
-  if(wr.length<2){svg.innerHTML='<text x="180" y="50" text-anchor="middle" font-size="11" fill="#A08870">데이터 부족 (근무 2개 이상 필요)</text>';return;}
+  const el=document.getElementById('wageTrendChart');
+  // 최근 14개 근무 기록, 날짜 오름차순
+  const wr=records.filter(r=>r.type==='work'&&r.dailyRate).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(-14);
+  if(!wr.length){el.innerHTML='<div style="text-align:center;padding:20px;font-size:12px;color:var(--textl)">데이터 없음</div>';return;}
   const rates=wr.map(r=>r.dailyRate);
-  const rawMin=Math.min(...rates),rawMax=Math.max(...rates);
-  const pad=rawMax===rawMin?2:Math.max((rawMax-rawMin)*0.15,1);
-  const minR=rawMin-pad,maxR=rawMax+pad,range=maxR-minR;
-  const W=360,H=90,P=18;
-  const xs=wr.map((_,i)=>P+(i/(wr.length-1))*(W-P*2));
-  const ys=rates.map(r=>H-P-((r-minR)/range)*(H-P*2));
-  let mainPath='',supPath='';
-  let mPrev=null,sPrev=null;
-  wr.forEach((r,i)=>{
-    if(r.support){supPath+=(sPrev===null?`M ${xs[i]} ${ys[i]}`:`L ${xs[i]} ${ys[i]}`);sPrev=i;}
-    else{mainPath+=(mPrev===null?`M ${xs[i]} ${ys[i]}`:`L ${xs[i]} ${ys[i]}`);mPrev=i;}
+  const maxRate=Math.max(...rates);
+  const minRate=Math.min(...rates);
+  // 주간별 평균 계산 (본파트만)
+  const wkAvg={};
+  wr.filter(r=>!r.support).forEach(r=>{
+    const wk=getWK(r.date);
+    if(!wkAvg[wk])wkAvg[wk]=[];
+    wkAvg[wk].push(r.dailyRate);
   });
-  const wkMap={};
-  wr.forEach((r,i)=>{if(!r.support){const wk=getWK(r.date);if(!wkMap[wk])wkMap[wk]=[];wkMap[wk].push({rate:r.dailyRate,i});}});
-  let avgLines='';
-  Object.entries(wkMap).forEach(([wk,items])=>{
-    if(!items.length)return;
-    const avg=items.reduce((s,x)=>s+x.rate,0)/items.length;
-    const ay=H-P-((avg-minR)/range)*(H-P*2);
-    const x1=xs[items[0].i],x2=xs[items[items.length-1].i];
-    avgLines+=`<line x1="${x1}" y1="${ay}" x2="${x2===x1?x1+20:x2}" y2="${ay}" stroke="#C8960A" stroke-width="1.5" stroke-dasharray="4,2"/>`;
-  });
-  const dots=wr.map((r,i)=>`<circle cx="${xs[i]}" cy="${ys[i]}" r="3.5" fill="${r.support?'#7AAABF':'#B8906A'}" stroke="#fff" stroke-width="1.5"/>`).join('');
-  svg.innerHTML=`
-    ${mainPath?`<path d="${mainPath}" fill="none" stroke="#B8906A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`:''}
-    ${supPath?`<path d="${supPath}" fill="none" stroke="#7AAABF" stroke-width="2.5" stroke-dasharray="6,3" stroke-linecap="round" stroke-linejoin="round"/>`:''}
-    ${avgLines}${dots}
-    <text x="${P}" y="${H-2}" font-size="9" fill="#A08870">$${rawMin.toFixed(2)}</text>
-    <text x="${P}" y="${P+2}" font-size="9" fill="#A08870">$${rawMax.toFixed(2)}</text>`;
-  const lblEl=document.getElementById('wageTrendLbls');
-  const n=wr.length;
-  const show=n<=4?wr.map((_,i)=>i):[0,Math.floor(n/2),n-1];
-  lblEl.innerHTML=wr.map((_,i)=>show.includes(i)?`<span style="font-size:9px;color:var(--textl)">${wr[i].date.slice(5)}</span>`:'<span></span>').join('');
+  const weekAvgMap={};
+  Object.entries(wkAvg).forEach(([wk,arr])=>{weekAvgMap[wk]=(arr.reduce((s,v)=>s+v,0)/arr.length);});
+
+  el.innerHTML=wr.map(r=>{
+    const pct=maxRate===minRate?80:40+((r.dailyRate-minRate)/(maxRate-minRate))*55;
+    const color=r.support?'var(--sky-dark)':'var(--camel)';
+    const wk=getWK(r.date);
+    const avg=weekAvgMap[wk];
+    const aboveAvg=!r.support&&avg&&r.dailyRate>=avg;
+    const d=new Date(r.date);
+    const dayNames=['일','월','화','수','목','금','토'];
+    const dayLbl=`${d.getMonth()+1}/${d.getDate()}(${dayNames[d.getDay()]})`;
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+      <div style="width:68px;font-size:10px;font-weight:700;color:var(--textm);flex-shrink:0">${dayLbl}</div>
+      <div style="flex:1;background:var(--powder);border-radius:6px;height:22px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:${color};border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;box-sizing:border-box;transition:width 0.3s">
+        </div>
+      </div>
+      <div style="width:56px;font-size:11px;font-weight:800;color:${aboveAvg?'var(--green)':r.support?'var(--sky-dark)':'var(--text)'};text-align:right;flex-shrink:0">$${r.dailyRate.toFixed(2)}</div>
+      ${!r.support&&avg?`<div style="font-size:9px;color:var(--textl);flex-shrink:0">${r.dailyRate>=avg?'▲':'▼'}</div>`:'<div style="width:10px;flex-shrink:0"></div>'}
+    </div>`;
+  }).join('');
 }
 
 function renderTaxInfo(recs){
