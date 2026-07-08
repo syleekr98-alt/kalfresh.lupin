@@ -728,7 +728,7 @@ body {
       <div class="sbox"><div class="sl">세전 수입</div><div class="sv" id="stGross">$0</div></div>
       <div class="sbox red"><div class="sl">지출</div><div class="sv" id="stSpend">$0</div></div>
       <div class="sbox yellow"><div class="sl">총 근무시간</div><div class="sv" id="stHours">0h</div></div>
-      <div class="sbox"><div class="sl">순수익</div><div class="sv" id="stNet">$0</div></div>
+      <div class="sbox"><div class="sl">세후수입</div><div class="sv" id="stNet">$0</div></div>
     </div>
 
     <!-- GOAL HERO -->
@@ -1511,7 +1511,7 @@ function renderEffChart(recs){
 function renderWageTrend(){
   const el=document.getElementById('wageTrendChart');
   // 최근 14개 근무 기록, 날짜 오름차순
-  const wr=records.filter(r=>r.type==='work'&&r.dailyRate).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(-14);
+  const wr=records.filter(r=>r.type==='work'&&r.dailyRate).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(-7);
   if(!wr.length){el.innerHTML='<div style="text-align:center;padding:20px;font-size:12px;color:var(--textl)">데이터 없음</div>';return;}
   const rates=wr.map(r=>r.dailyRate);
   const maxRate=Math.max(...rates);
