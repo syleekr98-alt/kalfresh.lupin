@@ -707,13 +707,7 @@ body {
 
     <div class="tax-card"><h3>🇦🇺 세금 정보 (이번달)</h3><div id="taxRows"></div></div>
 
-    <div class="card">
-      <h3>💸 Tax Return 예상</h3>
-      <div id="taxReturnRows"></div>
-      <div style="font-size:10px;color:var(--textl);margin-top:8px;padding-top:8px;border-top:1px solid var(--divider)">※ 예상치입니다. 세무사 상담 권장.</div>
-    </div>
-
-    <div class="ex-card">
+<div class="ex-card">
       <h3>💱 환율 AUD → KRW</h3>
       <div class="ex-big" id="exBig">₩ 0</div>
       <div style="font-size:10px;opacity:0.55;margin-bottom:10px">이번달 세후 수입 기준</div>
@@ -899,6 +893,50 @@ const FORTUNE_MSGS = [
   { get: () => true, msg: () => `오늘 하루도 버텼으면 그걸로 충분해요`, sub: () => `내일은 더 좋은 컨츄랙이 기다리고 있을지도 🎲` },
   { get: () => true, msg: () => `지금 이 피곤함이 나중에 자랑이 됩니다`, sub: () => `호주에서 버티는 것 자체가 스펙이에요 🦘` },
   { get: () => true, msg: () => `쉬는 날도 소중해요`, sub: () => `잘 쉬어야 더 잘 벌 수 있으니까 🛌` },
+  { get: () => true, msg: () => `오늘 몇 시간 일했어요?`, sub: () => `시간이 곧 돈이고, 돈이 곧 자유예요 ⏰` },
+  { get: () => true, msg: () => `한국에서라면 벌 수 없는 돈을 벌고 있어요`, sub: () => `지금 이 선택 잘한 거 맞아요 👍` },
+  { get: () => true, msg: () => `오늘도 파이팅!`, sub: () => `평범한 하루가 모여 특별한 워홀이 됩니다 🌟` },
+  { get: () => true, msg: () => `힘든 날일수록 통장 잔고를 봐요`, sub: () => `숫자가 당신을 응원하고 있어요 💰` },
+  { get: () => true, msg: () => `컨츄랙 높은 날 기분 최고죠?`, sub: () => `그 기분으로 오늘도 달려봐요 🔥` },
+  { get: () => true, msg: () => `호주 와서 제일 잘한 게 뭐예요?`, sub: () => `아마 이 앱 쓰는 거 아닐까요 😄` },
+  { get: () => true, msg: () => `아침에 일어나기 싫었던 당신`, sub: () => `그럼에도 출근한 당신이 대단해요 🌅` },
+  { get: () => true, msg: () => `밥은 먹었어요?`, sub: () => `잘 먹어야 일도 잘 돼요. 오늘 뭐 먹었어요? 🍜` },
+  { get: () => true, msg: () => `워홀은 체력전이에요`, sub: () => `몸 관리도 꼭 해요! 아프면 손해니까 🏃` },
+  { get: () => true, msg: () => `오늘 누군가는 쉬고 있어요`, sub: () => `일한 당신이 더 멋있어요 💼` },
+  { get: () => true, msg: () => `호주 날씨 오늘 어때요?`, sub: () => `날씨가 좋으면 기분도 좋고, 나쁘면 수당 생각해요 ⛅` },
+  { get: () => true, msg: () => `이 돈으로 뭐 할 거예요?`, sub: () => `목표가 있으면 일이 더 즐거워져요 🎯` },
+  { get: () => true, msg: () => `오늘 같이 일한 사람들 고마운 사람들이에요`, sub: () => `팀플레이가 잘 돼야 컨츄랙도 잘 나오죠 🤝` },
+  { get: () => true, msg: () => `퇴근하고 뭐 할 거예요?`, sub: () => `잘 쉬는 것도 워홀의 일부예요 🎮` },
+  { get: () => true, msg: () => `지금 한국 친구들은 사무실에 있을 시간이에요`, sub: () => `당신은 호주 하늘 아래 있죠. 나쁘지 않아요 😎` },
+  { get: () => true, msg: () => `오늘 주급 계산해봤어요?`, sub: () => `숫자 보면 힘이 나잖아요 📊` },
+  { get: () => true, msg: () => `모르는 사람들이랑 일하는 게 쉽지 않죠`, sub: () => `그것도 다 경험이 되고 있어요 💪` },
+  { get: () => true, msg: () => `영어 실력도 늘고 있어요`, sub: () => `일하면서 배우는 영어가 제일 빠른 거 알죠? 🗣️` },
+  { get: () => true, msg: () => `오늘 일기 썼어요?`, sub: () => `나중에 이 시간이 그리울 거예요 📖` },
+  { get: () => true, msg: () => `졸릴 때 커피 한 잔 해요`, sub: () => `호주 커피 퀄리티는 인정해야죠 ☕` },
+  { get: () => true, msg: () => `오늘 일 끝나고 맥주 한 캔 어때요?`, sub: () => `$5 안에도 괜찮은 거 많아요 🍺` },
+  { get: () => true, msg: () => `지치면 잠깐 하늘 봐요`, sub: () => `호주 하늘은 진짜 예쁘잖아요 🌈` },
+  { get: () => true, msg: () => `집에 가면 칭찬 한 번 해줘요`, sub: () => `오늘 정말 잘 버텼어요 👏` },
+  { get: () => true, msg: () => `호주까지 온 용기`, sub: () => `그 용기 지금도 살아있어요 🦁` },
+  { get: () => true, msg: () => `언젠간 이 시간을 그리워할 거예요`, sub: () => `지금 이 순간을 즐겨봐요 🌻` },
+  { get: () => true, msg: () => `오늘 좀 힘들었나요?`, sub: () => `그럴 때일수록 이 앱 켜봐요. 통장이 위로해줘요 💸` },
+  { get: () => true, msg: () => `워홀 몇 달째예요?`, sub: () => `시간이 갈수록 강해지고 있어요 📈` },
+  { get: () => true, msg: () => `현지인이랑 얘기해봤어요?`, sub: () => `말 걸기가 제일 어렵고 제일 중요해요 🌏` },
+  { get: () => true, msg: () => `오늘 하루도 기록됐어요`, sub: () => `이 기록들이 나중에 추억이 돼요 📱` },
+  { get: () => true, msg: () => `먹고 자고 일하고`, sub: () => `단순하지만 그게 워홀의 매력이에요 🔄` },
+  { get: () => true, msg: () => `한국에서 보던 하늘이랑 달라 보이죠?`, sub: () => `다른 나라의 하늘을 보고 있다는 것만으로 대단해요 🌍` },
+  { get: () => true, msg: () => `주급날이 제일 기쁜 날이죠`, sub: () => `그 기쁨을 위해 오늘도 달려봐요 🎉` },
+  { get: () => true, msg: () => `근육통이 있다면 열심히 일한 증거예요`, sub: () => `파스 붙이고 내일도 가보자고요 💊` },
+  { get: () => true, msg: () => `오늘 만난 사람 중 기억에 남는 사람 있어요?`, sub: () => `인연은 어디서든 생겨나요 😊` },
+  { get: () => true, msg: () => `호주에서 제일 맛있게 먹은 거 뭐예요?`, sub: () => `오늘 그거 먹어요. 보상이에요 🍽️` },
+  { get: () => true, msg: () => `포기하고 싶을 때가 제일 중요한 순간이에요`, sub: () => `그 고비만 넘기면 쭉 가요 🏔️` },
+  { get: () => true, msg: () => `오늘 컨츄랙 잘 나왔나요?`, sub: () => `잘 나왔으면 행복하고, 못 나왔으면 내일이 있어요 🎰` },
+  { get: () => true, msg: () => `한국 가면 제일 먼저 뭐 할 거예요?`, sub: () => `그 상상이 오늘의 원동력이 될 수 있어요 🏠` },
+  { get: () => true, msg: () => `지금 이 경험은 돈으로 살 수 없어요`, sub: () => `근데 돈도 벌고 있으니까 완벽하죠 😂` },
+  { get: () => true, msg: () => `오늘도 무사히 하루를 마쳤어요`, sub: () => `그것만으로도 충분히 잘한 거예요 ✅` },
+  { get: () => true, msg: () => `낯선 땅에서 혼자 버티는 중이에요`, sub: () => `그 자체가 이미 대단한 일이에요 🌟` },
+  { get: () => true, msg: () => `오늘 날씨 핑계 대지 말고 나가봐요`, sub: () => `호주 곳곳에 아직 못 가본 곳이 있잖아요 🗺️` },
+  { get: () => true, msg: () => `가끔은 아무 생각 없이 쉬어도 돼요`, sub: () => `열심히 일한 당신, 오늘만큼은 멍 때려도 OK 😶` },
+  { get: () => true, msg: () => `워홀 끝나고 후회 없으려면?`, sub: () => `지금 이 순간에 최선을 다하면 돼요 🙌` },
 ];
 
 function getThisWeekPay(){
@@ -1332,7 +1370,7 @@ function renderStats(){
   document.getElementById('stSpend').textContent=fmtA(spend);
   document.getElementById('stHours').textContent=`${Math.floor(hours)}h`;
   document.getElementById('stNet').textContent=fmtA(netIncome-spend);
-  renderEffChart(recs);renderWageTrend();renderTaxInfo(recs);renderTaxReturn();renderWkCharts();
+  renderEffChart(recs);renderWageTrend();renderTaxInfo(recs);renderWkCharts();
 }
 
 function renderEffChart(recs){
@@ -1408,28 +1446,6 @@ function renderTaxInfo(recs){
     <div class="tax-row"><span class="tk">연금 Super ${cfg.superRate}%</span><span class="tv" style="color:#7dff7d">+$${superTotal.toFixed(2)}</span></div>
     <div class="tax-row hl"><span class="tk">세후 수령</span><span class="tv">$${(gross-tax).toFixed(2)}</span></div>
     <div class="tax-row"><span class="tk">TFN</span><span class="tv">${cfg.tfn==='notfn'?'없음(30%)':cfg.tfn==='resi'?'거주자':'있음(15%)'}</span></div>`;
-}
-
-function renderTaxReturn(){
-  const now=new Date();
-  const fyS=now.getMonth()>=6?`${now.getFullYear()}-07-01`:`${now.getFullYear()-1}-07-01`;
-  const fyE=now.getMonth()>=6?`${now.getFullYear()+1}-06-30`:`${now.getFullYear()}-06-30`;
-  const fyR=records.filter(r=>r.type==='work'&&r.date>=fyS&&r.date<=fyE);
-  const tGross=fyR.reduce((s,r)=>s+r.gross,0);const tTax=fyR.reduce((s,r)=>s+r.tax,0);
-  let actualTax=0;
-  if(cfg.tfn==='notfn')actualTax=tGross*0.30;
-  else if(cfg.tfn==='resi'){if(tGross>180000)actualTax=51667+(tGross-180000)*0.45;else if(tGross>120000)actualTax=29467+(tGross-120000)*0.37;else if(tGross>45000)actualTax=5092+(tGross-45000)*0.325;else if(tGross>18200)actualTax=(tGross-18200)*0.19;}
-  else actualTax=tGross*0.15;
-  const diff=tTax-actualTax;const isRef=diff>0;
-  document.getElementById('taxReturnRows').innerHTML=`
-    <div class="tr-grid">
-      <div class="tr-box"><div class="tl">세전 총수입</div><div class="tv">$${tGross.toFixed(0)}</div></div>
-      <div class="tr-box red"><div class="tl">납부한 세금</div><div class="tv">$${tTax.toFixed(0)}</div></div>
-    </div>
-    <div class="tr-result" style="background:${isRef?'#E8F5E0':'#FAE8E5'};border-radius:12px">
-      <div class="rl" style="color:${isRef?'#3a7a1e':'var(--red)'}">${isRef?'예상 환급액 💰':'예상 추가 납부 ⚠️'}</div>
-      <div class="rv" style="color:${isRef?'#3a7a1e':'var(--red)'}">$${Math.abs(diff).toFixed(2)}</div>
-    </div>`;
 }
 
 function getWeeks(n){
