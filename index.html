@@ -558,6 +558,7 @@ body {
     <div class="logo-area">
       <h1>🌽 칼프루팡</h1>
       <p>Made by LSY</p>
+      <p id="wdayLabel" style="display:none;font-size:11px;color:rgba(255,255,255,0.85);margin-top:2px;font-weight:700"></p>
     </div>
     <div class="hdr-rate" onclick="toggleCurrency()">
       <div class="rl">AUD/KRW</div>
@@ -745,6 +746,7 @@ body {
         <select id="sTFN" onchange="saveSetting()"><option value="tfn">TFN 있음 (15%)</option><option value="notfn">TFN 없음 (30%)</option><option value="resi">거주자 (누진세)</option></select>
       </div>
       <div class="setrow"><div><div class="sn">연금율 Super (%)</div><div class="ss">현행 11.5%</div></div><input type="number" id="sSuperRate" value="11.5" step="0.1" oninput="saveSetting()"></div>
+      <div class="setrow"><div><div class="sn">첫 출근일</div><div class="ss">설정하면 근무 일수 표시</div></div><input type="date" id="sStartDate" oninput="saveSetting()"></div>
     </div>
 
 <div class="set-group">
@@ -859,7 +861,7 @@ body {
 // ── STATE ──
 let records = JSON.parse(localStorage.getItem('kfp_records')||'[]');
 let cfg = JSON.parse(localStorage.getItem('kfp_cfg')||JSON.stringify({
-  wage:32.19,holiday:17.5,ph:225,tfn:'tfn',superRate:11.5,
+  wage:32.19,holiday:17.5,ph:225,tfn:'tfn',superRate:11.5,startDate:'',
   workplaces:[{name:'옥수수 파트',wage:0},{name:'콩 파트',wage:0},{name:'카페',wage:0}],
   categories:['식비','교통','쇼핑','숙박','의료','통신','여행','기타'],
   manRate:940
@@ -956,11 +958,30 @@ function refreshFortune(){
   document.getElementById('fortuneSub').textContent=f.sub(w);
 }
 
+function renderWdayLabel(){
+  const el=document.getElementById('wdayLabel');
+  if(!cfg.startDate){el.style.display='none';return;}
+  const start=new Date(cfg.startDate);
+  const today=new Date();
+  today.setHours(0,0,0,0);start.setHours(0,0,0,0);
+  const totalDays=Math.floor((today-start)/(1000*60*60*24))+1;
+  if(totalDays<=0){el.style.display='none';return;}
+  const months=Math.floor(totalDays/30);
+  const days=totalDays%30;
+  let sub='';
+  if(months>0&&days>0)sub=`${months}달하고 ${days}일`;
+  else if(months>0)sub=`딱 ${months}달`;
+  else sub=`${days}일`;
+  el.textContent=`오늘로 칼프 ${totalDays}일째, ${sub}`;
+  el.style.display='';
+}
+
 function init(){
   const now=new Date();
   ['wDate','sDate','iDate'].forEach(id=>document.getElementById(id).value=ds(now));
   document.getElementById('statMnav').style.display='';
   loadCfg();fetchRate();render();
+  renderWdayLabel();
   refreshFortune();
 }
 
@@ -970,7 +991,7 @@ function loadCfg(){
   document.getElementById('sPH').value=cfg.ph||225;
   document.getElementById('sTFN').value=cfg.tfn;
   document.getElementById('sSuperRate').value=cfg.superRate||11.5;
-
+  document.getElementById('sStartDate').value=cfg.startDate||'';
   document.getElementById('sManRate').value=cfg.manRate||940;
   renderWpList();renderCatTags();updateSelects();
 }
@@ -980,9 +1001,10 @@ function saveSetting(){
   cfg.ph=parseFloat(document.getElementById('sPH').value)||225;
   cfg.tfn=document.getElementById('sTFN').value;
   cfg.superRate=parseFloat(document.getElementById('sSuperRate').value)||11.5;
-
+  cfg.startDate=document.getElementById('sStartDate').value||'';
   cfg.manRate=parseFloat(document.getElementById('sManRate').value)||940;
-  localStorage.setItem('kfp_cfg',JSON.stringify(cfg));render();
+  localStorage.setItem('kfp_cfg',JSON.stringify(cfg));
+  renderWdayLabel();render();
 }
 function addWP(){
   const v=document.getElementById('newWP').value.trim();
