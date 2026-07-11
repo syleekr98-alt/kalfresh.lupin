@@ -1398,23 +1398,23 @@ function renderStats(){
 function renderEffChart(recs){
   const el=document.getElementById('effChart');
   const wm={};
-  recs.filter(r=>r.type==='work'&&!r.support).forEach(r=>{
+  recs.filter(r=>r.type==='work').forEach(r=>{
     const p=r.place;
-    if(!wm[p])wm[p]={gross:0,hours:0,rates:[]};
+    if(!wm[p])wm[p]={gross:0,hours:0,rates:[],support:r.support};
     wm[p].gross+=r.gross;
     wm[p].hours+=r.hours+r.mins/60;
-    wm[p].rates.push(r.dailyRate);
+    if(!r.support)wm[p].rates.push(r.dailyRate); // 지원파트는 평균 계산 제외
   });
   const entries=Object.entries(wm).map(([n,v])=>({
-    name:n,gross:v.gross,hours:v.hours,
-    effRate:v.rates.length>0?v.rates.reduce((s,r)=>s+r,0)/v.rates.length:0
+    name:n,gross:v.gross,hours:v.hours,support:v.support,
+    effRate:v.rates.length>0?v.rates.reduce((s,r)=>s+r,0)/v.rates.length:v.hours>0?v.gross/v.hours:0
   })).sort((a,b)=>b.effRate-a.effRate);
   if(!entries.length){el.innerHTML='<p style="font-size:12px;color:var(--textl);text-align:center;padding:12px 0">근무 기록 없음</p>';return;}
   const rankClass=['r1','r2','r3'];
   let html=entries.map((e,i)=>`
     <div class="eff-item">
       <div class="eff-rank ${rankClass[i]||''}">${i+1}</div>
-      <div class="eff-info"><div class="en">${e.name}</div><div class="es">${e.hours.toFixed(1)}h 근무 · 세전 $${e.gross.toFixed(0)}</div></div>
+      <div class="eff-info"><div class="en">${e.name}${e.support?' <span style="font-size:9px;color:var(--sky-dark);font-weight:700">[지원]</span>':''}</div><div class="es">${e.hours.toFixed(1)}h 근무 · 세전 $${e.gross.toFixed(0)}</div></div>
       <div class="eff-rate">$${e.effRate.toFixed(2)}/h</div>
     </div>`).join('');
   if(entries.length>=2){const diff=(entries[0].effRate-entries[entries.length-1].effRate).toFixed(2);html+=`<div class="eff-tip">💡 ${entries[0].name}이 ${entries[entries.length-1].name}보다 시간당 $${diff} 더 효율적이에요!</div>`;}
