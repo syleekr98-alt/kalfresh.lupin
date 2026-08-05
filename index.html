@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#8B6F5E">
 <title>🌽 칼프루팡</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
 :root {
   /* Palette from photo */
@@ -41,13 +41,10 @@
   --sh2:0 4px 24px rgba(122,92,74,0.14);
 }
 
-
-
-
 * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent }
 
 body {
-  font-family:'Nunito','Noto Sans KR',sans-serif;
+  font-family:'DM Sans','Noto Sans KR',sans-serif;
   background:var(--bg);
   color:var(--text);
   min-height:100vh;
@@ -82,9 +79,9 @@ body {
 }
 
 .logo-area h1 {
-  font-family:'Nunito',sans-serif;
-  font-size:22px;
-  font-weight:900;
+  font-family:'Playfair Display',serif;
+  font-size:24px;
+  font-weight:800;
   color:#fff;
   text-shadow:0 1px 3px rgba(60,40,20,0.5), 0 3px 10px rgba(60,40,20,0.3);
   letter-spacing:-0.5px;
@@ -158,7 +155,15 @@ body {
   z-index:2;
   margin-bottom:4px;
 }
+.sb-top { display:flex;justify-content:space-between;margin-bottom:6px }
 .sb-top span { font-size:10px;color:rgba(50,30,10,0.75);font-weight:800 }
+.sb-track { background:rgba(0,0,0,0.15);border-radius:20px;height:8px;overflow:hidden }
+.sb-fill {
+  height:100%;
+  background:linear-gradient(90deg,#FFE066,#FFC107);
+  border-radius:20px;
+  transition:width 0.8s cubic-bezier(.4,0,.2,1);
+}
 
 /* ── BOTTOM SHEET TRANSITION ── */
 .main-content {
@@ -184,7 +189,7 @@ body {
   background:var(--surface);
   border-top:1px solid var(--divider);
   display:flex;
-  padding:8px 0 max(12px, env(safe-area-inset-bottom, 12px));
+  padding:8px 0 max(12px, env(safe-area-inset-bottom,12px));
   z-index:100;
   box-shadow:0 -4px 20px rgba(122,92,74,0.08);
 }
@@ -195,15 +200,16 @@ body {
 .btab.active .bi { transform:scale(1.15) }
 
 /* ── PAGES ── */
-.page { display:none;padding:0 0 calc(110px + env(safe-area-inset-bottom, 20px));animation:fi 0.18s ease }
+.page { display:none;padding:0 0 calc(110px + env(safe-area-inset-bottom,20px));animation:fi 0.18s ease }
 .page.active { display:block }
 @keyframes fi { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
 
 .px { padding:0 16px }
 .stitle {
-  font-size:13px;font-weight:800;color:var(--textm);
+  font-size:11px;font-weight:700;color:var(--textl);
   margin:20px 16px 10px;
   display:flex;align-items:center;justify-content:space-between;
+  text-transform:uppercase;letter-spacing:0.7px;
 }
 
 /* ── QUICK ACTION CARDS ── */
@@ -338,10 +344,11 @@ body {
 
 /* CARD */
 .card {
-  background:var(--surface);border-radius:var(--r);padding:18px;
+  background:var(--surface);border-radius:var(--r);padding:20px;
   box-shadow:var(--sh);margin:0 16px 14px;
+  border:1px solid var(--divider);
 }
-.card h3 { font-size:14px;font-weight:800;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:7px }
+.card h3 { font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px }
 
 /* EFFICIENCY */
 .eff-item {
@@ -387,7 +394,35 @@ body {
 .lchart-wrap { height:100px;margin-bottom:8px }
 .lchart-svg { width:100%;height:100% }
 
-
+/* GOAL HERO */
+.goal-hero {
+  background:linear-gradient(145deg, var(--rocky) 0%, var(--rocky-dark) 100%);
+  border-radius:var(--r);
+  margin:0 16px 14px;
+  padding:20px;
+  box-shadow:var(--sh2);
+  position:relative;
+  overflow:hidden;
+}
+.goal-hero::before {
+  content:'';
+  position:absolute;top:-40px;right:-40px;
+  width:130px;height:130px;
+  background:rgba(255,255,255,0.06);border-radius:50%;
+}
+.goal-hero::after {
+  content:'';
+  position:absolute;bottom:-30px;left:-20px;
+  width:100px;height:100px;
+  background:rgba(255,255,255,0.04);border-radius:50%;
+}
+.gh-top { display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;position:relative;z-index:1 }
+.gh-type { font-size:12px;font-weight:700;color:rgba(255,255,255,0.65) }
+.gh-dday { font-size:18px;font-weight:900;color:#FFE066;letter-spacing:-0.5px }
+.gh-amount { font-size:34px;font-weight:900;color:#fff;letter-spacing:-1.5px;position:relative;z-index:1;margin-bottom:2px }
+.gh-amount span { font-size:16px;font-weight:600;color:rgba(255,255,255,0.55);margin-right:2px }
+.gh-saved { font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:14px;position:relative;z-index:1 }
+.gh-saved b { color:#AEFFB0 }
 
 /* CHEST PROGRESS VISUAL */
 .gh-chest {
@@ -415,6 +450,12 @@ body {
 .gh-eta { font-size:11px;color:#C8FFBE;padding:9px 12px;background:rgba(0,0,0,0.2);border-radius:10px;margin-bottom:6px;border-left:3px solid #4adf6a;position:relative;z-index:1 }
 .gh-warn { font-size:11px;color:#FFB3A8;padding:9px 12px;background:rgba(0,0,0,0.2);border-radius:10px;margin-bottom:6px;border-left:3px solid var(--red);position:relative;z-index:1 }
 .gh-tip { font-size:11px;color:#B3DEFF;padding:9px 12px;background:rgba(0,0,0,0.15);border-radius:10px;margin-bottom:6px;border-left:3px solid var(--sky);position:relative;z-index:1 }
+.gh-btn {
+  width:100%;background:rgba(255,255,255,0.14);border:1.5px solid rgba(255,255,255,0.25);
+  border-radius:12px;padding:11px;font-size:13px;font-weight:700;
+  cursor:pointer;font-family:inherit;color:#fff;margin-top:8px;
+  position:relative;z-index:1;transition:background 0.2s;
+}
 .gh-btn:active { background:rgba(255,255,255,0.22) }
 
 /* TAX CARD */
@@ -451,7 +492,7 @@ body {
 .tr-result .rv { font-size:24px;font-weight:900 }
 
 /* SETTINGS */
-.set-group { background:var(--surface);border-radius:var(--r);margin:0 16px 12px;overflow:hidden;box-shadow:var(--sh) }
+.set-group { background:var(--surface);border-radius:var(--r);margin:0 16px 12px;overflow:hidden;box-shadow:var(--sh);border:1px solid var(--divider) }
 .set-group-title { font-size:11px;font-weight:800;color:var(--textl);letter-spacing:0.5px;padding:14px 16px 6px;text-transform:uppercase }
 .setrow { display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--divider) }
 .setrow:last-child { border-bottom:none }
@@ -484,10 +525,13 @@ body {
 .wp-item-top { display:flex;align-items:center;justify-content:space-between;margin-bottom:7px }
 .wp-item-name { font-size:13px;font-weight:700 }
 .wp-item-del { background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:2px }
-.wp-item-name-input { font-size:13px;font-weight:700;background:var(--powder);border:1.5px solid var(--camel);border-radius:8px;padding:4px 8px;font-family:inherit;color:var(--text);outline:none;width:calc(100% - 36px) }
+.wp-item-name-input { font-size:13px;font-weight:600;background:var(--powder);border:1.5px solid var(--divider);border-radius:8px;padding:6px 10px;font-family:inherit;color:var(--text);outline:none;width:calc(100% - 36px) }
+.wp-item-wage { display:flex;align-items:center;gap:8px }
+.wp-item-wage label { font-size:11px;font-weight:700;color:var(--textl) }
+.wp-item-wage input { width:100px;background:var(--powder);border:1.5px solid var(--divider);border-radius:8px;padding:6px 8px;font-size:12px;font-family:inherit;color:var(--text);outline:none }
 
 /* MODAL */
-.mover { display:none;position:fixed;inset:0;background:rgba(44,31,20,0.5);z-index:200;align-items:flex-end;justify-content:center }
+.mover { display:none;position:fixed;inset:0;background:rgba(30,15,5,0.5);backdrop-filter:blur(2px);z-index:200;align-items:flex-end;justify-content:center }
 .mover.open { display:flex }
 .modal {
   background:var(--surface2);
@@ -571,7 +615,10 @@ body {
     <span class="sk">🏦 이번달 누적 예상 연금 (Super)</span>
     <span class="sv" id="hdrSuper">$0.00</span>
   </div>
-
+  <div class="savebar" id="savebar" style="display:none">
+    <div class="sb-top"><span id="sbLabel">저축 목표</span><span id="sbPct">0%</span></div>
+    <div class="sb-track"><div class="sb-fill" id="sbFill" style="width:0%"></div></div>
+  </div>
 
   <!-- Landscape illustration -->
   <svg class="hdr-illustration" viewBox="0 0 430 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
@@ -622,7 +669,7 @@ body {
 <div class="page active" id="page-home">
   <div class="main-content">
     <div class="pull-handle"></div>
-    <div class="stitle">기록하기</div>
+    <div class="stitle" style="justify-content:space-between">기록하기 <button onclick="openSecondCalc()" style="font-size:11px;font-weight:700;background:var(--camel-pale);border:1.5px solid var(--camel);color:var(--camel);border-radius:10px;padding:4px 10px;cursor:pointer;font-family:inherit">🌾 비자 계산기</button></div>
     <div class="qbtns">
       <button class="qbtn work" onclick="openM('work')"><span class="qi">⏱️</span>근무</button>
       <button class="qbtn spend" onclick="openM('spend')"><span class="qi">🧾</span>지출</button>
@@ -674,7 +721,7 @@ body {
 <div class="page" id="page-stats">
   <div class="main-content">
     <div class="pull-handle"></div>
-    <div class="hist-switcher" style="margin:0 16px 4px">
+    <div class="hist-switcher">
       <button id="stab-month" class="active" onclick="setStatMode('month')">이번달</button>
       <button id="stab-thisweek" onclick="setStatMode('thisweek')">이번주</button>
       <button id="stab-lastweek" onclick="setStatMode('lastweek')">저번주</button>
@@ -692,6 +739,7 @@ body {
       <div class="sbox"><div class="sl">세후수입</div><div class="sv" id="stNet">$0</div></div>
     </div>
 
+    <!-- GOAL HERO -->
 <div class="card"><h3>⚡ 파트별 실질 시급 순위</h3><div id="effChart"></div></div>
 
     <div class="card">
@@ -705,7 +753,13 @@ body {
 
     <div class="tax-card"><h3>🇦🇺 세금 정보 (이번달)</h3><div id="taxRows"></div></div>
 
-<div class="ex-card">
+    <div class="card">
+      <h3>💸 Tax Return 예상</h3>
+      <div id="taxReturnRows"></div>
+      <div style="font-size:10px;color:var(--textl);margin-top:8px;padding-top:8px;border-top:1px solid var(--divider)">※ 예상치입니다. 세무사 상담 권장.</div>
+    </div>
+
+    <div class="ex-card">
       <h3>💱 환율 AUD → KRW</h3>
       <div class="ex-big" id="exBig">₩ 0</div>
       <div style="font-size:10px;opacity:0.55;margin-bottom:10px">이번달 세후 수입 기준</div>
@@ -744,6 +798,16 @@ body {
       </div>
       <div class="setrow"><div><div class="sn">연금율 Super (%)</div><div class="ss">현행 11.5%</div></div><input type="number" id="sSuperRate" value="11.5" step="0.1" oninput="saveSetting()"></div>
       <div class="setrow"><div><div class="sn">첫 출근일</div><div class="ss">설정하면 근무 일수 표시</div></div><input type="date" id="sStartDate" oninput="saveSetting()"></div>
+    </div>
+    <div class="set-group">
+      <div class="set-group-title">숙소 설정</div>
+      <div class="setrow"><div><div class="sn">숙소 유형</div><div class="ss">회사숙소는 주급에서 자동 차감</div></div>
+        <select id="sDormEnabled" onchange="saveSetting()">
+          <option value="0">외부숙소 (직접 관리)</option>
+          <option value="1">회사숙소 (주급 차감)</option>
+        </select>
+      </div>
+      <div class="setrow" id="dormFeeRow"><div><div class="sn">주간 숙소비 (AUD)</div><div class="ss">주급에서 자동 차감됩니다</div></div><input type="number" id="sDormFee" placeholder="0" step="0.01" oninput="saveSetting()"></div>
     </div>
 
 <div class="set-group">
@@ -858,8 +922,8 @@ body {
 // ── STATE ──
 let records = JSON.parse(localStorage.getItem('kfp_records')||'[]');
 let cfg = JSON.parse(localStorage.getItem('kfp_cfg')||JSON.stringify({
-  wage:32.19,holiday:17.5,ph:225,tfn:'tfn',superRate:11.5,startDate:'',
-  workplaces:[{name:'옥수수 파트',wage:0},{name:'콩 파트',wage:0},{name:'카페',wage:0}],
+  wage:32.19,holiday:17.5,ph:225,tfn:'tfn',superRate:11.5,startDate:'',dormEnabled:false,dormFee:0,
+  workplaces:[{name:'옥수수 파트'},{name:'콩 파트'},{name:'카페'}],
   categories:['식비','교통','쇼핑','숙박','의료','통신','여행','기타'],
   manRate:940
 }));
@@ -867,7 +931,6 @@ let exchRate=0,showKrw=false,hFilter='all';
 let hY=new Date().getFullYear(),hM=new Date().getMonth();
 let sY=new Date().getFullYear(),sM=new Date().getMonth();
 let histViewMode='list';
-let statMode='month';
 const CE={'식비':'🍜','교통':'🚌','쇼핑':'🧾','숙박':'🏠','의료':'🏥','통신':'📱','여행':'✈️','기타':'💸'};
 
 function ds(d){return d.toISOString().slice(0,10);}
@@ -876,101 +939,184 @@ function toDS(d){return d.toISOString().slice(0,10);}
 function fmtA(n){return showKrw&&exchRate?`₩${Math.round(n*exchRate).toLocaleString()}`:`$${n.toFixed(2)}`;}
 function fmtS(n){return showKrw&&exchRate?`₩${Math.round(n*exchRate/1000)}K`:`$${Math.round(n)}`;}
 
+// ── 컨츄랙 주급 계산 ──
+function calcWeeklyPay(mainRecs){
+  if(!mainRecs.length)return{pay:0,avgRate:0,effHours:0,mode:''};
+  const minWage=cfg.wage;
+  const avgRate=mainRecs.reduce((s,r)=>s+r.dailyRate,0)/mainRecs.length;
+  const totalHours=mainRecs.reduce((s,r)=>s+r.hours+r.mins/60,0);
+  const dayCount=mainRecs.length;
+  if(avgRate>=minWage)return{pay:avgRate*totalHours,avgRate,effHours:totalHours,mode:'contract'};
+  const effHours=Math.max(totalHours-0.5*dayCount,0);
+  return{pay:minWage*effHours,avgRate,effHours,mode:'minimum'};
+}
+
+function getWeekRange(offsetWeeks){
+  const now=new Date();
+  const day=now.getDay(),diff=now.getDate()-(day===0?6:day-1);
+  const mon=new Date(now);mon.setDate(diff-(offsetWeeks*7));
+  const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  return{s:toDS(mon),e:toDS(sun)};
+}
+
+// ── 통계 탭 모드 ──
+let statMode='month';
+function setStatMode(mode){
+  statMode=mode;
+  document.querySelectorAll('.hist-switcher button[id^="stab-"]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('stab-'+mode).classList.add('active');
+  document.getElementById('statMnav').style.display=(mode==='month')?'':'none';
+  document.getElementById('statWeekLbl').style.display=(mode==='month')?'none':'';
+  renderStats();
+}
+
+// ── 칼프 일수 ──
+function renderWdayLabel(){
+  const el=document.getElementById('wdayLabel');
+  if(!cfg.startDate){el.style.display='none';return;}
+  const start=new Date(cfg.startDate),today=new Date();
+  today.setHours(0,0,0,0);start.setHours(0,0,0,0);
+  const totalDays=Math.floor((today-start)/(1000*60*60*24))+1;
+  if(totalDays<=0){el.style.display='none';return;}
+  const months=Math.floor(totalDays/30),days=totalDays%30;
+  const sub=months>0&&days>0?`${months}달하고 ${days}일`:months>0?`딱 ${months}달`:`${days}일`;
+  el.textContent=`오늘로 칼프 ${totalDays}일째, ${sub}`;
+  el.style.display='';
+}
+
 // ── 오늘의 한마디 ──
-const FORTUNE_MSGS = [
-  // 주급 비교 (호주 물가 기반)
-  { get: (w) => w > 0, msg: (w) => `이번주 예상 주급 $${w.toFixed(0)}`, sub: (w) => `빅맥 ${Math.floor(w/8.5)}개, 아보카도토스트 ${Math.floor(w/22)}번 먹을 수 있어요 🥑` },
-  { get: (w) => w > 0, msg: (w) => `이번주 예상 주급 $${w.toFixed(0)}`, sub: (w) => `콜스 장보기 ${Math.floor(w/120)}주치, 편의점 커피 ${Math.floor(w/5)}잔 🛒` },
-  { get: (w) => w > 0, msg: (w) => `이번주 예상 주급 $${w.toFixed(0)}`, sub: (w) => `치킨 ${Math.floor(w/22)}마리, 피쉬앤칩스 ${Math.floor(w/16)}번 🍗` },
-  { get: (w) => w > 0, msg: (w) => `이번주 예상 주급 $${w.toFixed(0)}`, sub: (w) => `버스 ${Math.floor(w/4.2)}번, 주유 ${Math.floor(w/90)}번 넣을 수 있어요 🚌` },
-  { get: (w) => w > 0, msg: (w) => `이번주 예상 주급 $${w.toFixed(0)}`, sub: (w) => `밀크티 ${Math.floor(w/7)}잔, 스시트레인 ${Math.floor(w/30)}번 🍵` },
-  { get: (w) => w > 0, msg: (w) => `이번주 예상 주급 $${w.toFixed(0)}`, sub: (w) => `넷플릭스 ${Math.floor(w/17.99)}달, 짐 ${Math.floor(w/50)}달 끊을 수 있어요 🏋️` },
-  // 랜덤 응원 메시지
-  { get: () => true, msg: () => `오늘도 수고했어요 💪`, sub: () => `땀 흘린 만큼 통장도 두꺼워지는 중` },
-  { get: () => true, msg: () => `워홀 인생 최고의 투자는 지금이에요`, sub: () => `지금 이 순간도 경험이 쌓이는 중 ✨` },
-  { get: () => true, msg: () => `비도 오고 더워도 출근한 당신`, sub: () => `호주 날씨도 통장도 이겨내는 중 ☀️` },
-  { get: () => true, msg: () => `오늘 하루도 버텼으면 그걸로 충분해요`, sub: () => `내일은 더 좋은 컨츄랙이 기다리고 있을지도 🎲` },
-  { get: () => true, msg: () => `지금 이 피곤함이 나중에 자랑이 됩니다`, sub: () => `호주에서 버티는 것 자체가 스펙이에요 🦘` },
-  { get: () => true, msg: () => `쉬는 날도 소중해요`, sub: () => `잘 쉬어야 더 잘 벌 수 있으니까 🛌` },
-  { get: () => true, msg: () => `오늘 몇 시간 일했어요?`, sub: () => `시간이 곧 돈이고, 돈이 곧 자유예요 ⏰` },
-  { get: () => true, msg: () => `한국에서라면 벌 수 없는 돈을 벌고 있어요`, sub: () => `지금 이 선택 잘한 거 맞아요 👍` },
-  { get: () => true, msg: () => `오늘도 파이팅!`, sub: () => `평범한 하루가 모여 특별한 워홀이 됩니다 🌟` },
-  { get: () => true, msg: () => `힘든 날일수록 통장 잔고를 봐요`, sub: () => `숫자가 당신을 응원하고 있어요 💰` },
-  { get: () => true, msg: () => `컨츄랙 높은 날 기분 최고죠?`, sub: () => `그 기분으로 오늘도 달려봐요 🔥` },
-  { get: () => true, msg: () => `호주 와서 제일 잘한 게 뭐예요?`, sub: () => `아마 이 앱 쓰는 거 아닐까요 😄` },
-  { get: () => true, msg: () => `아침에 일어나기 싫었던 당신`, sub: () => `그럼에도 출근한 당신이 대단해요 🌅` },
-  { get: () => true, msg: () => `밥은 먹었어요?`, sub: () => `잘 먹어야 일도 잘 돼요. 오늘 뭐 먹었어요? 🍜` },
-  { get: () => true, msg: () => `워홀은 체력전이에요`, sub: () => `몸 관리도 꼭 해요! 아프면 손해니까 🏃` },
-  { get: () => true, msg: () => `오늘 누군가는 쉬고 있어요`, sub: () => `일한 당신이 더 멋있어요 💼` },
-  { get: () => true, msg: () => `호주 날씨 오늘 어때요?`, sub: () => `날씨가 좋으면 기분도 좋고, 나쁘면 수당 생각해요 ⛅` },
-  { get: () => true, msg: () => `이 돈으로 뭐 할 거예요?`, sub: () => `목표가 있으면 일이 더 즐거워져요 🎯` },
-  { get: () => true, msg: () => `오늘 같이 일한 사람들 고마운 사람들이에요`, sub: () => `팀플레이가 잘 돼야 컨츄랙도 잘 나오죠 🤝` },
-  { get: () => true, msg: () => `퇴근하고 뭐 할 거예요?`, sub: () => `잘 쉬는 것도 워홀의 일부예요 🎮` },
-  { get: () => true, msg: () => `지금 한국 친구들은 사무실에 있을 시간이에요`, sub: () => `당신은 호주 하늘 아래 있죠. 나쁘지 않아요 😎` },
-  { get: () => true, msg: () => `오늘 주급 계산해봤어요?`, sub: () => `숫자 보면 힘이 나잖아요 📊` },
-  { get: () => true, msg: () => `모르는 사람들이랑 일하는 게 쉽지 않죠`, sub: () => `그것도 다 경험이 되고 있어요 💪` },
-  { get: () => true, msg: () => `영어 실력도 늘고 있어요`, sub: () => `일하면서 배우는 영어가 제일 빠른 거 알죠? 🗣️` },
-  { get: () => true, msg: () => `오늘 일기 썼어요?`, sub: () => `나중에 이 시간이 그리울 거예요 📖` },
-  { get: () => true, msg: () => `졸릴 때 커피 한 잔 해요`, sub: () => `호주 커피 퀄리티는 인정해야죠 ☕` },
-  { get: () => true, msg: () => `오늘 일 끝나고 맥주 한 캔 어때요?`, sub: () => `$5 안에도 괜찮은 거 많아요 🍺` },
-  { get: () => true, msg: () => `지치면 잠깐 하늘 봐요`, sub: () => `호주 하늘은 진짜 예쁘잖아요 🌈` },
-  { get: () => true, msg: () => `집에 가면 칭찬 한 번 해줘요`, sub: () => `오늘 정말 잘 버텼어요 👏` },
-  { get: () => true, msg: () => `호주까지 온 용기`, sub: () => `그 용기 지금도 살아있어요 🦁` },
-  { get: () => true, msg: () => `언젠간 이 시간을 그리워할 거예요`, sub: () => `지금 이 순간을 즐겨봐요 🌻` },
-  { get: () => true, msg: () => `오늘 좀 힘들었나요?`, sub: () => `그럴 때일수록 이 앱 켜봐요. 통장이 위로해줘요 💸` },
-  { get: () => true, msg: () => `워홀 몇 달째예요?`, sub: () => `시간이 갈수록 강해지고 있어요 📈` },
-  { get: () => true, msg: () => `현지인이랑 얘기해봤어요?`, sub: () => `말 걸기가 제일 어렵고 제일 중요해요 🌏` },
-  { get: () => true, msg: () => `오늘 하루도 기록됐어요`, sub: () => `이 기록들이 나중에 추억이 돼요 📱` },
-  { get: () => true, msg: () => `먹고 자고 일하고`, sub: () => `단순하지만 그게 워홀의 매력이에요 🔄` },
-  { get: () => true, msg: () => `한국에서 보던 하늘이랑 달라 보이죠?`, sub: () => `다른 나라의 하늘을 보고 있다는 것만으로 대단해요 🌍` },
-  { get: () => true, msg: () => `주급날이 제일 기쁜 날이죠`, sub: () => `그 기쁨을 위해 오늘도 달려봐요 🎉` },
-  { get: () => true, msg: () => `근육통이 있다면 열심히 일한 증거예요`, sub: () => `파스 붙이고 내일도 가보자고요 💊` },
-  { get: () => true, msg: () => `오늘 만난 사람 중 기억에 남는 사람 있어요?`, sub: () => `인연은 어디서든 생겨나요 😊` },
-  { get: () => true, msg: () => `호주에서 제일 맛있게 먹은 거 뭐예요?`, sub: () => `오늘 그거 먹어요. 보상이에요 🍽️` },
-  { get: () => true, msg: () => `포기하고 싶을 때가 제일 중요한 순간이에요`, sub: () => `그 고비만 넘기면 쭉 가요 🏔️` },
-  { get: () => true, msg: () => `오늘 컨츄랙 잘 나왔나요?`, sub: () => `잘 나왔으면 행복하고, 못 나왔으면 내일이 있어요 🎰` },
-  { get: () => true, msg: () => `한국 가면 제일 먼저 뭐 할 거예요?`, sub: () => `그 상상이 오늘의 원동력이 될 수 있어요 🏠` },
-  { get: () => true, msg: () => `지금 이 경험은 돈으로 살 수 없어요`, sub: () => `근데 돈도 벌고 있으니까 완벽하죠 😂` },
-  { get: () => true, msg: () => `오늘도 무사히 하루를 마쳤어요`, sub: () => `그것만으로도 충분히 잘한 거예요 ✅` },
-  { get: () => true, msg: () => `낯선 땅에서 혼자 버티는 중이에요`, sub: () => `그 자체가 이미 대단한 일이에요 🌟` },
-  { get: () => true, msg: () => `오늘 날씨 핑계 대지 말고 나가봐요`, sub: () => `호주 곳곳에 아직 못 가본 곳이 있잖아요 🗺️` },
-  { get: () => true, msg: () => `가끔은 아무 생각 없이 쉬어도 돼요`, sub: () => `열심히 일한 당신, 오늘만큼은 멍 때려도 OK 😶` },
-  { get: () => true, msg: () => `워홀 끝나고 후회 없으려면?`, sub: () => `지금 이 순간에 최선을 다하면 돼요 🙌` },
+const FORTUNE_MSGS=[
+  {get:(w)=>w>0,msg:(w)=>`이번주 예상 주급 $${w.toFixed(0)}`,sub:(w)=>`빅맥 ${Math.floor(w/8.5)}개, 아보카도토스트 ${Math.floor(w/22)}번 🥑`},
+  {get:(w)=>w>0,msg:(w)=>`이번주 예상 주급 $${w.toFixed(0)}`,sub:(w)=>`콜스 장보기 ${Math.floor(w/120)}주치, 편의점 커피 ${Math.floor(w/5)}잔 🛒`},
+  {get:(w)=>w>0,msg:(w)=>`이번주 예상 주급 $${w.toFixed(0)}`,sub:(w)=>`치킨 ${Math.floor(w/22)}마리, 피쉬앤칩스 ${Math.floor(w/16)}번 🍗`},
+  {get:(w)=>w>0,msg:(w)=>`이번주 예상 주급 $${w.toFixed(0)}`,sub:(w)=>`버스 ${Math.floor(w/4.2)}번, 주유 ${Math.floor(w/90)}번 🚌`},
+  {get:(w)=>w>0,msg:(w)=>`이번주 예상 주급 $${w.toFixed(0)}`,sub:(w)=>`밀크티 ${Math.floor(w/7)}잔, 스시트레인 ${Math.floor(w/30)}번 🍵`},
+  {get:(w)=>w>0,msg:(w)=>`이번주 예상 주급 $${w.toFixed(0)}`,sub:(w)=>`넷플릭스 ${Math.floor(w/17.99)}달, 짐 ${Math.floor(w/50)}달 🏋️`},
+  {get:()=>true,msg:()=>`오늘도 수고했어요 💪`,sub:()=>`땀 흘린 만큼 통장도 두꺼워지는 중`},
+  {get:()=>true,msg:()=>`워홀 인생 최고의 투자는 지금이에요`,sub:()=>`지금 이 순간도 경험이 쌓이는 중 ✨`},
+  {get:()=>true,msg:()=>`비도 오고 더워도 출근한 당신`,sub:()=>`호주 날씨도 통장도 이겨내는 중 ☀️`},
+  {get:()=>true,msg:()=>`오늘 하루도 버텼으면 그걸로 충분해요`,sub:()=>`내일은 더 좋은 컨츄랙이 기다리고 있을지도 🎲`},
+  {get:()=>true,msg:()=>`지금 이 피곤함이 나중에 자랑이 됩니다`,sub:()=>`호주에서 버티는 것 자체가 스펙이에요 🦘`},
+  {get:()=>true,msg:()=>`쉬는 날도 소중해요`,sub:()=>`잘 쉬어야 더 잘 벌 수 있으니까 🛌`},
+  {get:()=>true,msg:()=>`오늘 몇 시간 일했어요?`,sub:()=>`시간이 곧 돈이고, 돈이 곧 자유예요 ⏰`},
+  {get:()=>true,msg:()=>`한국에서라면 벌 수 없는 돈을 벌고 있어요`,sub:()=>`지금 이 선택 잘한 거 맞아요 👍`},
+  {get:()=>true,msg:()=>`오늘도 파이팅!`,sub:()=>`평범한 하루가 모여 특별한 워홀이 됩니다 🌟`},
+  {get:()=>true,msg:()=>`힘든 날일수록 통장 잔고를 봐요`,sub:()=>`숫자가 당신을 응원하고 있어요 💰`},
+  {get:()=>true,msg:()=>`컨츄랙 높은 날 기분 최고죠?`,sub:()=>`그 기분으로 오늘도 달려봐요 🔥`},
+  {get:()=>true,msg:()=>`아침에 일어나기 싫었던 당신`,sub:()=>`그럼에도 출근한 당신이 대단해요 🌅`},
+  {get:()=>true,msg:()=>`밥은 먹었어요?`,sub:()=>`잘 먹어야 일도 잘 돼요 🍜`},
+  {get:()=>true,msg:()=>`워홀은 체력전이에요`,sub:()=>`몸 관리도 꼭 해요! 아프면 손해니까 🏃`},
+  {get:()=>true,msg:()=>`오늘 일 끝나고 맥주 한 캔 어때요?`,sub:()=>`$5 안에도 괜찮은 거 많아요 🍺`},
+  {get:()=>true,msg:()=>`지치면 잠깐 하늘 봐요`,sub:()=>`호주 하늘은 진짜 예쁘잖아요 🌈`},
+  {get:()=>true,msg:()=>`집에 가면 칭찬 한 번 해줘요`,sub:()=>`오늘 정말 잘 버텼어요 👏`},
+  {get:()=>true,msg:()=>`호주까지 온 용기`,sub:()=>`그 용기 지금도 살아있어요 🦁`},
+  {get:()=>true,msg:()=>`언젠간 이 시간을 그리워할 거예요`,sub:()=>`지금 이 순간을 즐겨봐요 🌻`},
+  {get:()=>true,msg:()=>`오늘 좀 힘들었나요?`,sub:()=>`그럴 때일수록 이 앱 켜봐요. 통장이 위로해줘요 💸`},
+  {get:()=>true,msg:()=>`워홀 몇 달째예요?`,sub:()=>`시간이 갈수록 강해지고 있어요 📈`},
+  {get:()=>true,msg:()=>`오늘 하루도 기록됐어요`,sub:()=>`이 기록들이 나중에 추억이 돼요 📱`},
+  {get:()=>true,msg:()=>`주급날이 제일 기쁜 날이죠`,sub:()=>`그 기쁨을 위해 오늘도 달려봐요 🎉`},
+  {get:()=>true,msg:()=>`근육통이 있다면 열심히 일한 증거예요`,sub:()=>`파스 붙이고 내일도 가보자고요 💊`},
+  {get:()=>true,msg:()=>`포기하고 싶을 때가 제일 중요한 순간이에요`,sub:()=>`그 고비만 넘기면 쭉 가요 🏔️`},
+  {get:()=>true,msg:()=>`오늘 컨츄랙 잘 나왔나요?`,sub:()=>`잘 나왔으면 행복하고, 못 나왔으면 내일이 있어요 🎰`},
+  {get:()=>true,msg:()=>`한국 가면 제일 먼저 뭐 할 거예요?`,sub:()=>`그 상상이 오늘의 원동력이에요 🏠`},
+  {get:()=>true,msg:()=>`지금 이 경험은 돈으로 살 수 없어요`,sub:()=>`근데 돈도 벌고 있으니까 완벽하죠 😂`},
+  {get:()=>true,msg:()=>`오늘도 무사히 하루를 마쳤어요`,sub:()=>`그것만으로도 충분히 잘한 거예요 ✅`},
+  {get:()=>true,msg:()=>`낯선 땅에서 혼자 버티는 중이에요`,sub:()=>`그 자체가 이미 대단한 일이에요 🌟`},
+  {get:()=>true,msg:()=>`가끔은 아무 생각 없이 쉬어도 돼요`,sub:()=>`열심히 일한 당신, 오늘만큼은 멍 때려도 OK 😶`},
+  {get:()=>true,msg:()=>`워홀 끝나고 후회 없으려면?`,sub:()=>`지금 이 순간에 최선을 다하면 돼요 🙌`},
+  {get:()=>true,msg:()=>`영어 실력도 늘고 있어요`,sub:()=>`일하면서 배우는 영어가 제일 빠른 거 알죠? 🗣️`},
+  {get:()=>true,msg:()=>`졸릴 때 커피 한 잔 해요`,sub:()=>`호주 커피 퀄리티는 인정해야죠 ☕`},
+  {get:()=>true,msg:()=>`호주에서 제일 맛있게 먹은 거 뭐예요?`,sub:()=>`오늘 그거 먹어요. 보상이에요 🍽️`},
+  {get:()=>true,msg:()=>`오늘 주급 계산해봤어요?`,sub:()=>`숫자 보면 힘이 나잖아요 📊`},
+  {get:()=>true,msg:()=>`현지인이랑 얘기해봤어요?`,sub:()=>`말 걸기가 제일 어렵고 제일 중요해요 🌏`},
+  {get:()=>true,msg:()=>`오늘 일기 썼어요?`,sub:()=>`나중에 이 시간이 그리울 거예요 📖`},
+  {get:()=>true,msg:()=>`한국 친구들은 사무실에 있을 시간이에요`,sub:()=>`당신은 호주 하늘 아래 있죠. 나쁘지 않아요 😎`},
+  {get:()=>true,msg:()=>`호주에서 버티는 것 자체가 자랑이에요`,sub:()=>`귀국하면 무조건 멋있어 보여요 ✈️`},
+  {get:()=>true,msg:()=>`이번 주도 잘 해냈어요`,sub:()=>`다음 주도 잘 할 수 있어요 🏁`},
+  {get:()=>true,msg:()=>`몸이 힘들다면 잠깐 쉬어가도 돼요`,sub:()=>`번아웃보다 조금 쉬는 게 나아요 💆`},
+  {get:()=>true,msg:()=>`호주 오기 전 나보다 지금 내가 더 강해졌어요`,sub:()=>`매일 조금씩 성장 중이에요 🌱`},
+  {get:()=>true,msg:()=>`워홀의 끝에 뭐가 기다리든`,sub:()=>`지금 쌓이는 경험이 제일 값진 거예요 💎`},
+  {get:()=>true,msg:()=>`오늘 하루 어떠셨어요?`,sub:()=>`잘 버텼으면 그걸로 충분해요 🌙`},
 ];
 
 function getThisWeekPay(){
-  const {s,e}=getWeekRange(0);
+  const{s,e}=getWeekRange(0);
   const wr=records.filter(r=>r.type==='work'&&r.date>=s&&r.date<=e);
-  const mainRecs=wr.filter(r=>!r.support);
-  const {pay}=calcWeeklyPay(mainRecs);
-  const supPay=wr.filter(r=>r.support).reduce((a,r)=>a+r.gross,0);
-  return pay+supPay;
+  const{pay}=calcWeeklyPay(wr.filter(r=>!r.support));
+  return pay+wr.filter(r=>r.support).reduce((a,r)=>a+r.gross,0);
 }
 
 function refreshFortune(){
   const w=getThisWeekPay();
+  const el=document.getElementById('fortuneMsg');if(!el)return;
   const eligible=FORTUNE_MSGS.filter(f=>f.get(w));
   const f=eligible[Math.floor(Math.random()*eligible.length)];
   document.getElementById('fortuneMsg').textContent=f.msg(w);
   document.getElementById('fortuneSub').textContent=f.sub(w);
 }
 
-function renderWdayLabel(){
-  const el=document.getElementById('wdayLabel');
-  if(!cfg.startDate){el.style.display='none';return;}
-  const start=new Date(cfg.startDate);
-  const today=new Date();
-  today.setHours(0,0,0,0);start.setHours(0,0,0,0);
-  const totalDays=Math.floor((today-start)/(1000*60*60*24))+1;
-  if(totalDays<=0){el.style.display='none';return;}
-  const months=Math.floor(totalDays/30);
-  const days=totalDays%30;
-  let sub='';
-  if(months>0&&days>0)sub=`${months}달하고 ${days}일`;
-  else if(months>0)sub=`딱 ${months}달`;
-  else sub=`${days}일`;
-  el.textContent=`오늘로 칼프 ${totalDays}일째, ${sub}`;
-  el.style.display='';
+// ── 세컨비자 계산기 ──
+function openSecondCalc(){
+  const now=new Date();
+  const s=cfg.startDate||toDS(new Date(now.getFullYear(),now.getMonth()-3,now.getDate()));
+  document.getElementById('scFrom').value=s;
+  document.getElementById('scTo').value=toDS(now);
+  calcSecond();
+  document.getElementById('mSecond').style.display='flex';
+}
+
+function calcSecond(){
+  const workRecs=records.filter(r=>r.type==='work');
+  // 전체 집계
+  const allDays=new Set(workRecs.map(r=>r.date)).size;
+  const allHours=workRecs.reduce((s,r)=>s+r.hours+r.mins/60,0);
+  document.getElementById('secondAll').innerHTML=renderSecondResult(allDays,allHours);
+  // 기간 지정 집계
+  const from=document.getElementById('scFrom').value;
+  const to=document.getElementById('scTo').value;
+  if(from&&to&&from<=to){
+    const rangeRecs=workRecs.filter(r=>r.date>=from&&r.date<=to);
+    const rangeDays=new Set(rangeRecs.map(r=>r.date)).size;
+    const rangeHours=rangeRecs.reduce((s,r)=>s+r.hours+r.mins/60,0);
+    document.getElementById('secondRange').innerHTML=renderSecondResult(rangeDays,rangeHours);
+  } else {
+    document.getElementById('secondRange').innerHTML='<div style="font-size:12px;color:var(--textl);text-align:center;padding:8px">기간을 선택해주세요</div>';
+  }
+}
+
+function renderSecondResult(days,hours){
+  const h=Math.floor(hours),m=Math.round((hours-h)*60);
+  const ok88=days>=88,ok179=days>=179;
+  return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+    <div style="background:${ok88?'var(--green-pale)':'var(--powder)'};border-radius:12px;padding:14px;text-align:center">
+      <div style="font-size:11px;font-weight:700;color:var(--textl);margin-bottom:6px">총 근무일수</div>
+      <div style="font-size:28px;font-weight:900;color:${ok88?'var(--green)':'var(--text)'}">${days}</div>
+      <div style="font-size:11px;color:var(--textl);font-weight:700;margin-top:4px">${hours.toFixed(1)}시간</div>
+    </div>
+    <div style="background:var(--powder);border-radius:12px;padding:14px;text-align:center">
+      <div style="font-size:11px;font-weight:700;color:var(--textl);margin-bottom:6px">총 근무시간</div>
+      <div style="font-size:22px;font-weight:900;color:var(--text)">${h}h${m>0?' '+m+'m':''}</div>
+      <div style="font-size:11px;color:var(--textl);margin-top:4px">${h*60+m}분</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div style="background:${ok88?'var(--green-pale)':'var(--camel-pale)'};border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px">
+      <div style="font-size:18px">${ok88?'✅':'⏳'}</div>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--textm)">세컨비자</div>
+        <div style="font-size:12px;font-weight:800;color:${ok88?'var(--green)':'var(--textm)'}">88일 ${ok88?'달성!':days+'일'}</div>
+        ${!ok88?`<div style="font-size:10px;color:var(--textl)">${88-days}일 남음</div>`:''}
+      </div>
+    </div>
+    <div style="background:${ok179?'var(--green-pale)':'var(--camel-pale)'};border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px">
+      <div style="font-size:18px">${ok179?'✅':'⏳'}</div>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--textm)">써드비자</div>
+        <div style="font-size:12px;font-weight:800;color:${ok179?'var(--green)':'var(--textm)'}">179일 ${ok179?'달성!':days+'일'}</div>
+        ${!ok179?`<div style="font-size:10px;color:var(--textl)">${179-days}일 남음</div>`:''}
+      </div>
+    </div>
+  </div>`;
 }
 
 function init(){
@@ -988,7 +1134,6 @@ function loadCfg(){
   document.getElementById('sPH').value=cfg.ph||225;
   document.getElementById('sTFN').value=cfg.tfn;
   document.getElementById('sSuperRate').value=cfg.superRate||11.5;
-  document.getElementById('sStartDate').value=cfg.startDate||'';
   document.getElementById('sManRate').value=cfg.manRate||940;
   renderWpList();renderCatTags();updateSelects();
 }
@@ -998,10 +1143,8 @@ function saveSetting(){
   cfg.ph=parseFloat(document.getElementById('sPH').value)||225;
   cfg.tfn=document.getElementById('sTFN').value;
   cfg.superRate=parseFloat(document.getElementById('sSuperRate').value)||11.5;
-  cfg.startDate=document.getElementById('sStartDate').value||'';
   cfg.manRate=parseFloat(document.getElementById('sManRate').value)||940;
-  localStorage.setItem('kfp_cfg',JSON.stringify(cfg));
-  renderWdayLabel();render();
+  localStorage.setItem('kfp_cfg',JSON.stringify(cfg));render();
 }
 function addWP(){
   const v=document.getElementById('newWP').value.trim();
@@ -1020,8 +1163,7 @@ function renameWP(oldName,newName){
   if(wp)wp.name=newName;
   localStorage.setItem('kfp_cfg',JSON.stringify(cfg));
   records.forEach(r=>{if(r.type==='work'&&r.place===oldName)r.place=newName;});
-  save();
-  renderWpList();updateSelects();render();
+  save();renderWpList();updateSelects();render();
   showToast(`'${newName}'으로 변경됐어요!`);
 }
 function removeWP(n){cfg.workplaces=cfg.workplaces.filter(w=>w.name!==n);localStorage.setItem('kfp_cfg',JSON.stringify(cfg));renderWpList();updateSelects();}
@@ -1030,7 +1172,7 @@ function renderWpList(){
   if(!cfg.workplaces.length){el.innerHTML='<div style="padding:12px 16px;font-size:12px;color:var(--textl)">근무지 없음</div>';return;}
   el.innerHTML=cfg.workplaces.map(w=>`
     <div class="wp-item">
-      <div class="wp-item-top"><input class="wp-item-name-input" value="${w.name.replace(/"/g,'&quot;')}" data-orig="${w.name.replace(/"/g,'&quot;')}" onchange="renameWP(this.dataset.orig,this.value)" onblur="renameWP(this.dataset.orig,this.value)"><button class="wp-item-del" onclick="removeWP('${w.name.replace(/'/g,"\\'")}')">✕</button></div>
+      <div class="wp-item-top"><span class="wp-item-name">${w.name}</span><button class="wp-item-del" onclick="removeWP('${w.name.replace(/'/g,"\\'")}')">✕</button></div>
     </div>`).join('');
 }
 function addCat(){
@@ -1127,7 +1269,6 @@ function saveIncome(){
   save();closeM('mIncome');showToast('수입 기록 저장!');
   document.getElementById('iAmt').value='';document.getElementById('iMemo').value='';
 }
-
 function delRec(id){records=records.filter(r=>r.id!==id);save();showToast('삭제됨');}
 function save(){localStorage.setItem('kfp_records',JSON.stringify(records));render();}
 
@@ -1188,7 +1329,13 @@ function renderHeader(){
   document.getElementById('hdrNet').textContent=fmtS(netIncome-spend);
   document.getElementById('hdrSuper').textContent=`$${superTotal.toFixed(2)}`;
   const totalNet=records.filter(r=>r.type==='work').reduce((s,r)=>s+r.net,0)+records.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0)-records.filter(r=>r.type==='spend').reduce((s,r)=>s+r.amount,0);
-
+  if(cfg.goalAmt>0){
+    document.getElementById('savebar').style.display='block';
+    const pct=Math.min(100,Math.max(0,totalNet/cfg.goalAmt*100));
+    document.getElementById('sbFill').style.width=pct+'%';
+    document.getElementById('sbLabel').textContent=`${cfg.goalType||'목표'} $${cfg.goalAmt.toLocaleString()}`;
+    document.getElementById('sbPct').textContent=`${pct.toFixed(0)}%`;
+  } else {document.getElementById('savebar').style.display='none';}
 }
 
 // CHEST SVG for goal
@@ -1255,13 +1402,15 @@ function renderHistory(){
         flush();lastWk=wk;
         const wRecs=weekMap[wk];
         const mainRecs=wRecs.filter(x=>!x.support);
-        const{pay:weeklyPay,avgRate,mode}=calcWeeklyPay(mainRecs);
+        const{pay:wPay,avgRate,mode}=calcWeeklyPay(mainRecs);
         const supPay=wRecs.filter(x=>x.support).reduce((s,x)=>s+x.gross,0);
-        const totalPay=weeklyPay+supPay;
+        const dormD=cfg.dormEnabled&&cfg.dormFee>0?cfg.dormFee:0;
+        const totalPay=wPay+supPay-dormD;
         const d=new Date(wk);const end=new Date(wk);end.setDate(end.getDate()+6);
         const supCount=wRecs.filter(x=>x.support).length;
         const modeTag=mode==='minimum'?` <span style="font-size:9px;color:var(--sky-dark)">[최저]</span>`:'';
-        html+=`<div class="wk-label"><span class="wl">📅 ${d.getMonth()+1}/${d.getDate()} ~ ${end.getMonth()+1}/${end.getDate()}</span><span class="wr">${avgRate>0?`avg $${avgRate.toFixed(2)}/h`:''} · 주급 $${totalPay.toFixed(2)}${modeTag}${supCount>0?` · 지원 ${supCount}회`:''}</span></div>`;
+        const dormTag=dormD>0?` <span style="font-size:9px;color:var(--red)">숙소-$${dormD}</span>`:'';
+        html+=`<div class="wk-label"><span class="wl">📅 ${d.getMonth()+1}/${d.getDate()} ~ ${end.getMonth()+1}/${end.getDate()}</span><span class="wr">${avgRate>0?`avg $${avgRate.toFixed(2)}/h`:''} · 주급 $${totalPay.toFixed(2)}${modeTag}${dormTag}${supCount>0?` · 지원 ${supCount}회`:''}</span></div>`;
       }
       sectionItems.push(itemHTML(r));
     } else {flush();lastWk='';html+=`<div class="tx-section" style="margin:0 16px 8px">${itemHTML(r)}</div>`;}
@@ -1314,79 +1463,32 @@ function showCalDay(d){
   el.innerHTML=`<div style="font-size:13px;font-weight:800;color:var(--textm);padding:8px 16px">${hM+1}월 ${d}일</div><div class="tx-section" style="margin:0 16px">${recs.map(r=>itemHTML(r)).join('')}</div>`;
 }
 
-// ── 컨츄랙 주급 계산 ──
-// 본파트 기록 배열로 해당 주의 실질 주급 계산
-// 평균 컨츄랙 >= 최저시급: 평균시급 × 총시간
-// 평균 컨츄랙 <  최저시급: 최저시급 × (총시간 - 0.5h × 일수)
-function calcWeeklyPay(mainRecs){
-  if(!mainRecs.length)return{pay:0,avgRate:0,effHours:0,mode:''};
-  const minWage=cfg.wage;
-  const avgRate=mainRecs.reduce((s,r)=>s+r.dailyRate,0)/mainRecs.length;
-  const totalHours=mainRecs.reduce((s,r)=>s+r.hours+r.mins/60,0);
-  const dayCount=mainRecs.length;
-  if(avgRate>=minWage){
-    return{pay:avgRate*totalHours,avgRate,effHours:totalHours,mode:'contract'};
-  } else {
-    const effHours=Math.max(totalHours-0.5*dayCount,0);
-    return{pay:minWage*effHours,avgRate,effHours,mode:'minimum'};
-  }
-}
-
-function getWeekRange(offsetWeeks){
-  const now=new Date();
-  const day=now.getDay(),diff=now.getDate()-(day===0?6:day-1);
-  const mon=new Date(now);mon.setDate(diff-(offsetWeeks*7));
-  const sun=new Date(mon);sun.setDate(mon.getDate()+6);
-  return{s:toDS(mon),e:toDS(sun)};
-}
-
-function setStatMode(mode){
-  statMode=mode;
-  document.querySelectorAll('.hist-switcher button[id^="stab-"]').forEach(b=>b.classList.remove('active'));
-  document.getElementById('stab-'+mode).classList.add('active');
-  document.getElementById('statMnav').style.display=(mode==='month')?'':'none';
-  document.getElementById('statWeekLbl').style.display=(mode==='month')?'none':'';
-  renderStats();
-}
-
 function renderStats(){
   let recs,periodLabel;
   if(statMode==='thisweek'){
-    const{s,e}=getWeekRange(0);
-    recs=records.filter(r=>r.date>=s&&r.date<=e);
-    const sm=new Date(s),em=new Date(e);
-    periodLabel=`${sm.getMonth()+1}/${sm.getDate()} ~ ${em.getMonth()+1}/${em.getDate()}`;
+    const{s,e}=getWeekRange(0);recs=records.filter(r=>r.date>=s&&r.date<=e);
+    const sm=new Date(s),em=new Date(e);periodLabel=`${sm.getMonth()+1}/${sm.getDate()} ~ ${em.getMonth()+1}/${em.getDate()}`;
     document.getElementById('statWeekLbl').textContent=periodLabel;
   } else if(statMode==='lastweek'){
-    const{s,e}=getWeekRange(1);
-    recs=records.filter(r=>r.date>=s&&r.date<=e);
-    const sm=new Date(s),em=new Date(e);
-    periodLabel=`${sm.getMonth()+1}/${sm.getDate()} ~ ${em.getMonth()+1}/${em.getDate()}`;
+    const{s,e}=getWeekRange(1);recs=records.filter(r=>r.date>=s&&r.date<=e);
+    const sm=new Date(s),em=new Date(e);periodLabel=`${sm.getMonth()+1}/${sm.getDate()} ~ ${em.getMonth()+1}/${em.getDate()}`;
     document.getElementById('statWeekLbl').textContent=periodLabel;
-  } else {
-    recs=getMRecs(sY,sM);
-    periodLabel=ml(sY,sM);
-  }
+  } else {recs=getMRecs(sY,sM);periodLabel=ml(sY,sM);}
   document.getElementById('sMonthLbl').textContent=periodLabel;
   const grossPretax=recs.filter(r=>r.type==='work').reduce((s,r)=>s+r.gross,0)+recs.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
   const spend=recs.filter(r=>r.type==='spend').reduce((s,r)=>s+r.amount,0);
   const hours=recs.filter(r=>r.type==='work').reduce((s,r)=>s+r.hours+r.mins/60,0);
-  // 주별로 묶어 컨츄랙 규칙 적용하여 순수익 계산
-  const wkSet={};
-  recs.filter(r=>r.type==='work').forEach(r=>{const wk=getWK(r.date);if(!wkSet[wk])wkSet[wk]=[];wkSet[wk].push(r);});
-  let contractIncome=0;
-  Object.entries(wkSet).forEach(([wk,wRecs])=>{
-    const mainRecs=wRecs.filter(x=>!x.support);
-    const{pay}=calcWeeklyPay(mainRecs);
-    const supPay=wRecs.filter(x=>x.support).reduce((s,x)=>s+x.gross,0);
-    contractIncome+=pay+supPay;
-  });
-  const otherIncome=recs.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
-  const netIncome=recs.filter(r=>r.type==='work').reduce((s,r)=>s+(r.gross-r.tax),0)+otherIncome;
+  const netIncome=recs.filter(r=>r.type==='work').reduce((s,r)=>s+(r.gross-r.tax),0)+recs.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
+  // 숙소비 차감 (이번달/이번주/저번주 주 수 계산)
+  let dormDeduct=0;
+  if(cfg.dormEnabled&&cfg.dormFee>0){
+    const wkSet=new Set(recs.filter(r=>r.type==='work').map(r=>getWK(r.date)));
+    dormDeduct=wkSet.size*cfg.dormFee;
+  }
   document.getElementById('stGross').textContent=fmtA(grossPretax);
   document.getElementById('stSpend').textContent=fmtA(spend);
   document.getElementById('stHours').textContent=`${Math.floor(hours)}h`;
-  document.getElementById('stNet').textContent=fmtA(netIncome-spend);
+  document.getElementById('stNet').textContent=fmtA(netIncome-spend-dormDeduct);
   renderEffChart(recs);renderWageTrend();renderTaxInfo(recs);renderWkCharts();
 }
 
@@ -1395,21 +1497,19 @@ function renderEffChart(recs){
   const wm={};
   recs.filter(r=>r.type==='work').forEach(r=>{
     const p=r.place;
-    if(!wm[p])wm[p]={gross:0,hours:0,rates:[],support:r.support};
-    wm[p].gross+=r.gross;
-    wm[p].hours+=r.hours+r.mins/60;
-    if(!r.support)wm[p].rates.push(r.dailyRate); // 지원파트는 평균 계산 제외
+    if(!wm[p])wm[p]={gross:0,hours:0,rates:[],isSupport:r.support};
+    wm[p].gross+=r.gross;wm[p].hours+=r.hours+r.mins/60;wm[p].rates.push(r.dailyRate);
   });
   const entries=Object.entries(wm).map(([n,v])=>({
-    name:n,gross:v.gross,hours:v.hours,support:v.support,
-    effRate:v.rates.length>0?v.rates.reduce((s,r)=>s+r,0)/v.rates.length:v.hours>0?v.gross/v.hours:0
+    name:n,gross:v.gross,hours:v.hours,isSupport:v.isSupport,
+    effRate:v.rates.length?v.rates.reduce((s,r)=>s+r,0)/v.rates.length:0
   })).sort((a,b)=>b.effRate-a.effRate);
   if(!entries.length){el.innerHTML='<p style="font-size:12px;color:var(--textl);text-align:center;padding:12px 0">근무 기록 없음</p>';return;}
   const rankClass=['r1','r2','r3'];
   let html=entries.map((e,i)=>`
     <div class="eff-item">
       <div class="eff-rank ${rankClass[i]||''}">${i+1}</div>
-      <div class="eff-info"><div class="en">${e.name}${e.support?' <span style="font-size:9px;color:var(--sky-dark);font-weight:700">[지원]</span>':''}</div><div class="es">${e.hours.toFixed(1)}h 근무 · 세전 $${e.gross.toFixed(0)}</div></div>
+      <div class="eff-info"><div class="en">${e.name}${e.isSupport?'<span style="font-size:10px;color:var(--sky-dark);margin-left:4px">[지원]</span>':''}</div><div class="es">${e.hours.toFixed(1)}h 근무 · 세전 $${e.gross.toFixed(0)}</div></div>
       <div class="eff-rate">$${e.effRate.toFixed(2)}/h</div>
     </div>`).join('');
   if(entries.length>=2){const diff=(entries[0].effRate-entries[entries.length-1].effRate).toFixed(2);html+=`<div class="eff-tip">💡 ${entries[0].name}이 ${entries[entries.length-1].name}보다 시간당 $${diff} 더 효율적이에요!</div>`;}
@@ -1418,36 +1518,26 @@ function renderEffChart(recs){
 
 function renderWageTrend(){
   const el=document.getElementById('wageTrendChart');
-  // 최근 14개 근무 기록, 날짜 오름차순
+  if(!el)return;
   const wr=records.filter(r=>r.type==='work'&&r.dailyRate).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(-7);
   if(!wr.length){el.innerHTML='<div style="text-align:center;padding:20px;font-size:12px;color:var(--textl)">데이터 없음</div>';return;}
   const rates=wr.map(r=>r.dailyRate);
-  const maxRate=Math.max(...rates);
-  const minRate=Math.min(...rates);
-  // 주간별 평균 계산 (본파트만)
+  const maxR=Math.max(...rates),minR=Math.min(...rates);
   const wkAvg={};
-  wr.filter(r=>!r.support).forEach(r=>{
-    const wk=getWK(r.date);
-    if(!wkAvg[wk])wkAvg[wk]=[];
-    wkAvg[wk].push(r.dailyRate);
-  });
-  const weekAvgMap={};
-  Object.entries(wkAvg).forEach(([wk,arr])=>{weekAvgMap[wk]=(arr.reduce((s,v)=>s+v,0)/arr.length);});
-
+  wr.filter(r=>!r.support).forEach(r=>{const wk=getWK(r.date);if(!wkAvg[wk])wkAvg[wk]=[];wkAvg[wk].push(r.dailyRate);});
+  const wkAvgMap={};
+  Object.entries(wkAvg).forEach(([wk,arr])=>{wkAvgMap[wk]=arr.reduce((s,v)=>s+v,0)/arr.length;});
   el.innerHTML=wr.map(r=>{
-    const pct=maxRate===minRate?80:40+((r.dailyRate-minRate)/(maxRate-minRate))*55;
+    const pct=maxR===minR?80:40+((r.dailyRate-minR)/(maxR-minR))*55;
     const color=r.support?'var(--sky-dark)':'var(--camel)';
-    const wk=getWK(r.date);
-    const avg=weekAvgMap[wk];
+    const avg=wkAvgMap[getWK(r.date)];
     const aboveAvg=!r.support&&avg&&r.dailyRate>=avg;
     const d=new Date(r.date);
-    const dayNames=['일','월','화','수','목','금','토'];
-    const dayLbl=`${d.getMonth()+1}/${d.getDate()}(${dayNames[d.getDay()]})`;
+    const dayLbl=`${d.getMonth()+1}/${d.getDate()}(${'일월화수목금토'[d.getDay()]})`;
     return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
       <div style="width:68px;font-size:10px;font-weight:700;color:var(--textm);flex-shrink:0">${dayLbl}</div>
       <div style="flex:1;background:var(--powder);border-radius:6px;height:22px;overflow:hidden">
-        <div style="width:${pct}%;height:100%;background:${color};border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;box-sizing:border-box;transition:width 0.3s">
-        </div>
+        <div style="width:${pct}%;height:100%;background:${color};border-radius:6px;transition:width 0.3s"></div>
       </div>
       <div style="width:56px;font-size:11px;font-weight:800;color:${aboveAvg?'var(--green)':r.support?'var(--sky-dark)':'var(--text)'};text-align:right;flex-shrink:0">$${r.dailyRate.toFixed(2)}</div>
       ${!r.support&&avg?`<div style="font-size:9px;color:var(--textl);flex-shrink:0">${r.dailyRate>=avg?'▲':'▼'}</div>`:'<div style="width:10px;flex-shrink:0"></div>'}
@@ -1469,6 +1559,7 @@ function renderTaxInfo(recs){
     <div class="tax-row"><span class="tk">TFN</span><span class="tv">${cfg.tfn==='notfn'?'없음(30%)':cfg.tfn==='resi'?'거주자':'있음(15%)'}</span></div>`;
 }
 
+
 function getWeeks(n){
   const weeks=[],now=new Date();
   const day=now.getDay(),diff=now.getDate()-(day===0?6:day-1);
@@ -1480,10 +1571,10 @@ function renderWkCharts(){
   const weeks=getWeeks(10);
   const data=weeks.map(({s,e,lbl})=>{
     const wr=records.filter(r=>r.date>=s&&r.date<=e&&r.type==='work');
-    const mainRecs=wr.filter(r=>!r.support);
-    const{pay:mainPay}=calcWeeklyPay(mainRecs);
-    const supPay=wr.filter(r=>r.support).reduce((a,r)=>a+r.gross,0);
-    return{lbl,hrs:wr.reduce((a,r)=>a+r.hours+r.mins/60,0),earn:mainPay+supPay};
+    const{pay:mp}=calcWeeklyPay(wr.filter(r=>!r.support));
+    const sp=wr.filter(r=>r.support).reduce((a,r)=>a+r.gross,0);
+    const dorm=cfg.dormEnabled&&cfg.dormFee>0?cfg.dormFee:0;
+    return{lbl,hrs:wr.reduce((a,r)=>a+r.hours+r.mins/60,0),earn:mp+sp-dorm};
   });
   const maxH=Math.max(...data.map(d=>d.hrs),1);const maxE=Math.max(...data.map(d=>d.earn),1);
   const el=document.getElementById('wkChart');if(!el)return;
@@ -1505,7 +1596,7 @@ function openM(type){
   document.getElementById(map[type]).classList.add('open');
   if(type==='work'){autoFillWage();calcW();updateSelects();}
   if(type==='spend')updateSelects();
-
+  if(type==='goal'){document.getElementById('gAmt').value=cfg.goalAmt||'';document.getElementById('gDate').value=cfg.goalDate||'';document.getElementById('gType').value=cfg.goalType||'';}
 }
 function closeM(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.mover').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
@@ -1526,5 +1617,39 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 
 init();
 </script>
+
+<!-- ── SECOND VISA CALC MODAL ── -->
+<div class="mover" id="mSecond">
+  <div class="modal" style="max-height:85vh;overflow-y:auto">
+    <div class="modal-handle"></div>
+    <div class="mtitle">🌾 세컨/써드비자 계산기 <button class="mclose" onclick="closeM('mSecond')">✕</button></div>
+    <div style="padding:0 20px 20px">
+      <div style="background:var(--camel-pale);border-radius:14px;padding:14px 16px;margin-bottom:16px;font-size:12px;color:var(--textm);line-height:1.7">
+        세컨/써드비자 신청에 필요한 <b>총 근무일수</b>와 <b>총 근무시간</b>을 자동으로 계산해줘요.<br>
+        기록된 근무 데이터를 기반으로 합니다.
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--divider);border-radius:16px;padding:18px;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:var(--textl);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px">📋 전체 기간 집계</div>
+        <div id="secondAll"></div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--divider);border-radius:16px;padding:18px;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:var(--textl);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">🗓️ 기간 직접 지정</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+          <div><label style="font-size:11px;font-weight:700;color:var(--textm);display:block;margin-bottom:4px">시작일</label>
+            <input type="date" id="scFrom" style="width:100%;background:var(--powder);border:1.5px solid var(--divider);border-radius:10px;padding:9px 10px;font-size:13px;font-family:inherit;color:var(--text);outline:none" oninput="calcSecond()"></div>
+          <div><label style="font-size:11px;font-weight:700;color:var(--textm);display:block;margin-bottom:4px">종료일</label>
+            <input type="date" id="scTo" style="width:100%;background:var(--powder);border:1.5px solid var(--divider);border-radius:10px;padding:9px 10px;font-size:13px;font-family:inherit;color:var(--text);outline:none" oninput="calcSecond()"></div>
+        </div>
+        <div id="secondRange"></div>
+      </div>
+      <div style="background:var(--gold-pale);border:1.5px solid var(--gold);border-radius:14px;padding:14px 16px;font-size:12px;color:var(--rocky);line-height:1.7">
+        💡 <b>비자별 조건</b><br>
+        세컨비자: 지역 지정 업종 <b>88일 이상</b><br>
+        써드비자: 지역 지정 업종 <b>179일 이상</b><br>
+        <span style="font-size:11px;opacity:0.75">(농업, 임업, 어업, 광업, 건설업 등)</span>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
