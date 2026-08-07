@@ -793,7 +793,14 @@ body {
 
     <div class="set-group">
       <div class="set-group-title">근무 설정</div>
-      <div class="setrow"><div><div class="sn">기본 시급 (AUD)</div><div class="ss">파트별 미설정시 사용</div></div><input type="number" id="sWage" value="32.19" step="0.01" oninput="saveSetting()"></div>
+      <div class="setrow"><div><div class="sn">워커 레벨</div><div class="ss">레벨에 따라 기준시급이 달라져요</div></div>
+        <select id="sLevel" onchange="onLevelChange()">
+          <option value="1">Lv.1 — $32.19/h</option>
+          <option value="2">Lv.2 — $33.06/h</option>
+          <option value="3">Lv.3 — $33.56/h</option>
+        </select>
+      </div>
+
       <div class="setrow"><div><div class="sn">홀리데이 페이 (%)</div><div class="ss">기본 17.5%</div></div><input type="number" id="sHoliday" value="17.5" step="0.1" oninput="saveSetting()"></div>
       <div class="setrow"><div><div class="sn">공휴일 페널티</div><div class="ss">QLD 기준</div></div>
         <select id="sPH" onchange="saveSetting()"><option value="225">2.25배 (QLD)</option><option value="200">2배</option><option value="250">2.5배</option></select>
@@ -921,7 +928,7 @@ body {
 // ── STATE ──
 let records = JSON.parse(localStorage.getItem('kfp_records')||'[]');
 let cfg = JSON.parse(localStorage.getItem('kfp_cfg')||JSON.stringify({
-  wage:32.19,holiday:17.5,ph:225,tfn:'tfn',superRate:11.5,startDate:'',dormEnabled:false,dormFee:0,
+  level:1,holiday:17.5,ph:225,tfn:'tfn',superRate:11.5,startDate:'',dormEnabled:false,dormFee:0,
   workplaces:[{name:'옥수수 파트'},{name:'콩 파트'},{name:'카페'}],
   categories:['식비','교통','쇼핑','숙박','의료','통신','여행','기타'],
   manRate:940
@@ -941,13 +948,27 @@ function fmtS(n){return showKrw&&exchRate?`₩${Math.round(n*exchRate/1000)}K`:`
 // ── 컨츄랙 주급 계산 ──
 function calcWeeklyPay(mainRecs){
   if(!mainRecs.length)return{pay:0,avgRate:0,effHours:0,mode:''};
-  const minWage=cfg.wage;
+  // 런치공제 기준: 항상 Lv1 $32.19 고정
+  const lunchThreshold=LUNCH_DEDUCT_WAGE;
+  // 레벨별 기준시급 (최소 보장 지급액 계산용)
+  const levelWage=cfg.wage||LEVEL_WAGES[cfg.level||1]||32.19;
   const avgRate=mainRecs.reduce((s,r)=>s+r.dailyRate,0)/mainRecs.length;
   const totalHours=mainRecs.reduce((s,r)=>s+r.hours+r.mins/60,0);
   const dayCount=mainRecs.length;
-  if(avgRate>=minWage)return{pay:avgRate*totalHours,avgRate,effHours:totalHours,mode:'contract'};
-  const effHours=Math.max(totalHours-0.5*dayCount,0);
-  return{pay:minWage*effHours,avgRate,effHours,mode:'minimum'};
+  if(avgRate>=lunchThreshold){
+    // 컨츄랙 평균이 32.19 이상 → 평균시급 × 총시간
+    return{pay:avgRate*totalHours,avgRate,effHours:totalHours,mode:'contract'};
+  } else {
+    // 컨츄랙 평균이 32.19 미만 → 각 레코드의 levelWage × (시간 - 0.5h) 합산
+    let pay=0;
+    mainRecs.forEach(r=>{
+      const rLevelWage=r.levelWage||levelWage;
+      const rHours=Math.max((r.hours+r.mins/60)-0.5,0);
+      pay+=rLevelWage*rHours;
+    });
+    const effHours=Math.max(totalHours-0.5*dayCount,0);
+    return{pay,avgRate,effHours,mode:'minimum'};
+  }
 }
 
 function getWeekRange(offsetWeeks){
@@ -992,25 +1013,28 @@ const FORTUNE_MSGS=[
   {get:(w)=>w>0,msg:(w)=>`이번주 예상 주급 $${w.toFixed(0)}`,sub:(w)=>`버스 ${Math.floor(w/4.2)}번, 주유 ${Math.floor(w/90)}번 🚌`},
   {get:(w)=>w>0,msg:(w)=>`이번주 예상 주급 $${w.toFixed(0)}`,sub:(w)=>`밀크티 ${Math.floor(w/7)}잔, 스시트레인 ${Math.floor(w/30)}번 🍵`},
   {get:(w)=>w>0,msg:(w)=>`이번주 예상 주급 $${w.toFixed(0)}`,sub:(w)=>`넷플릭스 ${Math.floor(w/17.99)}달, 짐 ${Math.floor(w/50)}달 🏋️`},
-  // 한국어 응원 메시지 20개
+  // 한국어 응원 메시지 10개
   {get:()=>true,msg:()=>`오늘도 수고했어요 💪`,sub:()=>`땀 흘린 만큼 통장도 두꺼워지는 중`},
   {get:()=>true,msg:()=>`비도 오고 더워도 출근한 당신`,sub:()=>`호주 날씨도 통장도 이겨내는 중 ☀️`},
-  {get:()=>true,msg:()=>`오늘 하루도 버텼으면 그걸로 충분해요`,sub:()=>`내일은 더 좋은 컨츄랙이 기다리고 있을지도 🎲`},
   {get:()=>true,msg:()=>`지금 이 피곤함이 나중에 자랑이 됩니다`,sub:()=>`호주에서 버티는 것 자체가 스펙이에요 🦘`},
-  {get:()=>true,msg:()=>`컨츄랙 높은 날 기분 최고죠?`,sub:()=>`그 기분으로 오늘도 달려봐요 🔥`},
   {get:()=>true,msg:()=>`아침에 일어나기 싫었던 당신`,sub:()=>`그럼에도 출근한 당신이 대단해요 🌅`},
-  {get:()=>true,msg:()=>`워홀은 체력전이에요`,sub:()=>`몸 관리도 꼭 해요! 아프면 손해니까 🏃`},
   {get:()=>true,msg:()=>`지치면 잠깐 하늘 봐요`,sub:()=>`호주 하늘은 진짜 예쁘잖아요 🌈`},
   {get:()=>true,msg:()=>`포기하고 싶을 때가 제일 중요한 순간이에요`,sub:()=>`그 고비만 넘기면 쭉 가요 🏔️`},
-  {get:()=>true,msg:()=>`오늘 컨츄랙 잘 나왔나요?`,sub:()=>`잘 나왔으면 행복하고, 못 나왔으면 내일이 있어요 🎰`},
   {get:()=>true,msg:()=>`지금 이 경험은 돈으로 살 수 없어요`,sub:()=>`근데 돈도 벌고 있으니까 완벽하죠 😂`},
   {get:()=>true,msg:()=>`낯선 땅에서 혼자 버티는 중이에요`,sub:()=>`그 자체가 이미 대단한 일이에요 🌟`},
-  {get:()=>true,msg:()=>`가끔은 아무 생각 없이 쉬어도 돼요`,sub:()=>`열심히 일한 당신, 오늘만큼은 멍 때려도 OK 😶`},
-  {get:()=>true,msg:()=>`주급날이 제일 기쁜 날이죠`,sub:()=>`그 기쁨을 위해 오늘도 달려봐요 🎉`},
   {get:()=>true,msg:()=>`호주까지 온 용기`,sub:()=>`그 용기 지금도 살아있어요 🦁`},
-  {get:()=>true,msg:()=>`한국 가면 제일 먼저 뭐 할 거예요?`,sub:()=>`그 상상이 오늘의 원동력이에요 🏠`},
   {get:()=>true,msg:()=>`워홀 끝나고 후회 없으려면?`,sub:()=>`지금 이 순간에 최선을 다하면 돼요 🙌`},
-  {get:()=>true,msg:()=>`호주에서 버티는 것 자체가 자랑이에요`,sub:()=>`귀국하면 무조건 멋있어 보여요 ✈️`},
+  // 성경 구절 10개 ✝️
+  {get:()=>true,msg:()=>`"내게 능력 주시는 자 안에서 내가 모든 것을 할 수 있느니라" ✝️`,sub:()=>`빌립보서 4:13 — I can do all things through Christ who strengthens me`},
+  {get:()=>true,msg:()=>`"여호와는 나의 목자시니 내게 부족함이 없으리로다" ✝️`,sub:()=>`시편 23:1 — The Lord is my shepherd; I shall not want`},
+  {get:()=>true,msg:()=>`"두려워하지 말라 내가 너와 함께 함이라 놀라지 말라 나는 네 하나님이 됨이라" ✝️`,sub:()=>`이사야 41:10 — Fear not, for I am with you`},
+  {get:()=>true,msg:()=>`"수고하고 무거운 짐 진 자들아 다 내게로 오라 내가 너희를 쉬게 하리라" ✝️`,sub:()=>`마태복음 11:28 — Come to me and I will give you rest`},
+  {get:()=>true,msg:()=>`"범사에 감사하라 이것이 그리스도 예수 안에서 너희를 향하신 하나님의 뜻이니라" ✝️`,sub:()=>`데살로니가전서 5:18 — Give thanks in all circumstances`},
+  {get:()=>true,msg:()=>`"너희 염려를 다 주께 맡기라 이는 그가 너희를 돌보심이라" ✝️`,sub:()=>`베드로전서 5:7 — Cast all your anxiety on Him, because He cares for you`},
+  {get:()=>true,msg:()=>`"오직 여호와를 앙망하는 자는 새 힘을 얻으리니 독수리가 날개치며 올라감 같을 것이요" ✝️`,sub:()=>`이사야 40:31 — Those who hope in the Lord will renew their strength`},
+  {get:()=>true,msg:()=>`"너는 마음을 다하여 여호와를 신뢰하고 네 명철을 의지하지 말라" ✝️`,sub:()=>`잠언 3:5 — Trust in the Lord with all your heart`},
+  {get:()=>true,msg:()=>`"주는 나의 힘이요 나의 방패시니 내 마음이 그를 의지하여 도움을 얻었도다" ✝️`,sub:()=>`시편 28:7 — The Lord is my strength and my shield`},
+  {get:()=>true,msg:()=>`"이 모든 일에 우리를 사랑하시는 이로 말미암아 우리가 넉넉히 이기느니라" ✝️`,sub:()=>`로마서 8:37 — We are more than conquerors through Him who loved us`},
   // 영어 단어 & 문장 80개
   {get:()=>true,msg:()=>`오늘의 단어: Perseverance 🌱`,sub:()=>`[pɜːrsɪˈvɪərəns] 인내, 끈기 — "Your perseverance will pay off."`},
   {get:()=>true,msg:()=>`오늘의 단어: Hustle 💪`,sub:()=>`[hʌsl] 열심히 일하다 — "Keep hustling, it'll be worth it!"`},
@@ -1308,7 +1332,7 @@ function init(){
 }
 
 function loadCfg(){
-  document.getElementById('sWage').value=cfg.wage;
+  document.getElementById('sLevel').value=cfg.level||1;
   document.getElementById('sHoliday').value=cfg.holiday;
   document.getElementById('sPH').value=cfg.ph||225;
   document.getElementById('sTFN').value=cfg.tfn;
@@ -1318,8 +1342,14 @@ function loadCfg(){
   document.getElementById('sManRate').value=cfg.manRate||940;
   renderWpList();renderCatTags();updateSelects();
 }
+const LEVEL_WAGES={1:32.19,2:33.06,3:33.56};
+const LUNCH_DEDUCT_WAGE=32.19; // 런치공제 기준 항상 Lv1 고정
+function onLevelChange(){
+  saveSetting();
+}
 function saveSetting(){
-  cfg.wage=parseFloat(document.getElementById('sWage').value)||32.19;
+  cfg.level=parseInt(document.getElementById('sLevel').value)||1;
+  cfg.wage=LEVEL_WAGES[cfg.level]||32.19;
   cfg.holiday=parseFloat(document.getElementById('sHoliday').value)||17.5;
   cfg.ph=parseFloat(document.getElementById('sPH').value)||225;
   cfg.tfn=document.getElementById('sTFN').value;
@@ -1379,7 +1409,7 @@ function updateSelects(){
 function autoFillWage(){
   const name=document.getElementById('wPlace').value;
   const wp=cfg.workplaces.find(w=>w.name===name);
-  document.getElementById('wRate').value=(wp&&wp.wage>0)?wp.wage:cfg.wage;calcW();
+  document.getElementById('wRate').value=(wp&&wp.wage>0)?wp.wage:(LEVEL_WAGES[cfg.level||1]||32.19);calcW();
 }
 function clearAll(){if(!confirm('모든 기록을 삭제할까요?'))return;records=[];localStorage.removeItem('kfp_records');render();showToast('초기화 완료');}
 
@@ -1413,7 +1443,7 @@ function calcW(){
   const h=parseFloat(document.getElementById('wH').value)||0;
   const m=parseFloat(document.getElementById('wM').value)||0;
   const hol=document.getElementById('wHol').checked;
-  const dr=parseFloat(document.getElementById('wRate').value)||cfg.wage;
+  const dr=parseFloat(document.getElementById('wRate').value)||(LEVEL_WAGES[cfg.level||1]||32.19);
   let rate=dr;if(hol)rate=dr*(cfg.ph/100);
   const gross=(h+m/60)*rate;const tax=calcTax(gross);const sup=calcSuper(gross);
   document.getElementById('pvH').textContent=`${h}h ${m}m`;
@@ -1430,11 +1460,12 @@ function saveWork(){
   const m=parseFloat(document.getElementById('wM').value)||0;
   const hol=document.getElementById('wHol').checked;
   const sup=document.getElementById('wSupport').checked;
-  const dr=parseFloat(document.getElementById('wRate').value)||cfg.wage;
+  const dr=parseFloat(document.getElementById('wRate').value)||(LEVEL_WAGES[cfg.level||1]||32.19);
   if(h===0&&m===0){showToast('근무시간을 입력해주세요');return;}
   let rate=dr;if(hol)rate=dr*(cfg.ph/100);
   const gross=(h+m/60)*rate;const tax=calcTax(gross);const superAmt=calcSuper(gross);
-  records.unshift({id:Date.now(),type:'work',date:document.getElementById('wDate').value,place:document.getElementById('wPlace').value||'미정',hours:h,mins:m,holiday:hol,support:sup,dailyRate:dr,appliedRate:rate,gross,tax,net:gross-tax,superAmt,memo:document.getElementById('wMemo').value});
+  const lvAtSave=cfg.level||1;
+  records.unshift({id:Date.now(),type:'work',date:document.getElementById('wDate').value,place:document.getElementById('wPlace').value||'미정',hours:h,mins:m,holiday:hol,support:sup,dailyRate:dr,appliedRate:rate,gross,tax,net:gross-tax,superAmt,level:lvAtSave,levelWage:LEVEL_WAGES[lvAtSave]||32.19,memo:document.getElementById('wMemo').value});
   save();closeM('mWork');showToast(sup?'지원 근무 저장!':'근무 기록 저장!');
   ['wH','wM','wMemo'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('wHol').checked=false;document.getElementById('wSupport').checked=false;autoFillWage();
@@ -1475,7 +1506,7 @@ function calcEW(){
   const h=parseFloat(document.getElementById('ewH').value)||0;
   const m=parseFloat(document.getElementById('ewM').value)||0;
   const hol=document.getElementById('ewHol').checked;
-  const dr=parseFloat(document.getElementById('ewRate').value)||cfg.wage;
+  const dr=parseFloat(document.getElementById('ewRate').value)||(LEVEL_WAGES[cfg.level||1]||32.19);
   let rate=dr;if(hol)rate=dr*(cfg.ph/100);
   const gross=(h+m/60)*rate;const tax=calcTax(gross);const sup=calcSuper(gross);
   document.getElementById('epvGross').textContent=`$${gross.toFixed(2)}`;
@@ -1490,7 +1521,7 @@ function updateWork(){
   const m=parseFloat(document.getElementById('ewM').value)||0;
   const hol=document.getElementById('ewHol').checked;
   const sup=document.getElementById('ewSupport').checked;
-  const dr=parseFloat(document.getElementById('ewRate').value)||cfg.wage;
+  const dr=parseFloat(document.getElementById('ewRate').value)||(LEVEL_WAGES[cfg.level||1]||32.19);
   if(h===0&&m===0){showToast('근무시간을 입력해주세요');return;}
   let rate=dr;if(hol)rate=dr*(cfg.ph/100);
   const gross=(h+m/60)*rate;const tax=calcTax(gross);const superAmt=calcSuper(gross);
