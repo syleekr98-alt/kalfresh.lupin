@@ -146,24 +146,30 @@ body {
 
 /* SAVE BAR */
 .savebar {
-  background:rgba(255,255,255,0.35);
-  backdrop-filter:blur(8px);
-  border:1px solid rgba(255,255,255,0.5);
-  border-radius:12px;
-  padding:8px 14px;
+  background:rgba(255,255,255,0.18);
+  backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,0.28);
+  border-radius:16px;
+  padding:10px 16px;
   position:relative;
   z-index:2;
-  margin-bottom:4px;
+  margin-bottom:6px;
+  cursor:pointer;
 }
-.sb-top { display:flex;justify-content:space-between;margin-bottom:6px }
-.sb-top span { font-size:10px;color:rgba(50,30,10,0.75);font-weight:800 }
-.sb-track { background:rgba(0,0,0,0.15);border-radius:20px;height:8px;overflow:hidden }
+.sb-top { display:flex;justify-content:space-between;align-items:center;margin-bottom:7px }
+.sb-emoji { font-size:14px;margin-right:5px }
+.sb-label { font-size:11px;color:rgba(255,255,255,0.9);font-weight:800;letter-spacing:0.2px }
+.sb-pct { font-size:12px;color:#FFE066;font-weight:900 }
+.sb-track { background:rgba(0,0,0,0.2);border-radius:20px;height:7px;overflow:hidden }
 .sb-fill {
   height:100%;
-  background:linear-gradient(90deg,#FFE066,#FFC107);
+  background:linear-gradient(90deg,#FFD700,#FFA500);
   border-radius:20px;
   transition:width 0.8s cubic-bezier(.4,0,.2,1);
 }
+.sb-bottom { display:flex;justify-content:space-between;margin-top:6px }
+.sb-saved { font-size:10px;color:rgba(255,255,255,0.7);font-weight:700 }
+.sb-remain { font-size:10px;color:rgba(255,255,255,0.55);font-weight:600 }
 
 /* ── BOTTOM SHEET TRANSITION ── */
 .main-content {
@@ -615,9 +621,16 @@ body {
     <span class="sk">🏦 이번달 누적 예상 연금 (Super)</span>
     <span class="sv" id="hdrSuper">$0.00</span>
   </div>
-  <div class="savebar" id="savebar" style="display:none">
-    <div class="sb-top"><span id="sbLabel">저축 목표</span><span id="sbPct">0%</span></div>
+  <div class="savebar" id="savebar" style="display:none" onclick="openM('goal')">
+    <div class="sb-top">
+      <span><span class="sb-emoji" id="sbEmoji">🎯</span><span class="sb-label" id="sbLabel">저축 목표</span></span>
+      <span class="sb-pct" id="sbPct">0%</span>
+    </div>
     <div class="sb-track"><div class="sb-fill" id="sbFill" style="width:0%"></div></div>
+    <div class="sb-bottom">
+      <span class="sb-saved" id="sbSaved"></span>
+      <span class="sb-remain" id="sbRemain"></span>
+    </div>
   </div>
 
   <!-- Landscape illustration -->
@@ -812,6 +825,12 @@ body {
       <div class="setrow"><div><div class="sn">첫 출근일</div><div class="ss">설정하면 근무 일수 표시</div></div><input type="date" id="sStartDate" oninput="saveSetting()"></div>
     </div>
     <div class="set-group">
+      <div class="set-group-title">저축 목표</div>
+      <div class="setrow"><div><div class="sn">목표 유형</div><div class="ss">이모지 포함 자유롭게 입력</div></div><input type="text" id="sGoalType" placeholder="예: 🚗 자동차" style="width:130px" oninput="saveSetting()"></div>
+      <div class="setrow"><div><div class="sn">목표 금액 (AUD)</div></div><input type="number" id="sGoalAmt" placeholder="8000" oninput="saveSetting()"></div>
+      <div class="setrow"><div><div class="sn">목표 날짜 (선택)</div></div><input type="date" id="sGoalDate" oninput="saveSetting()"></div>
+    </div>
+    <div class="set-group">
       <div class="set-group-title">숙소 설정</div>
       <div class="setrow"><div><div class="sn">주간 숙소비 (AUD)</div><div class="ss">0이면 숙소비 없음으로 처리</div></div><input type="number" id="sDormFee" placeholder="0" step="0.01" oninput="saveSetting()"></div>
     </div>
@@ -928,7 +947,7 @@ body {
 // ── STATE ──
 let records = JSON.parse(localStorage.getItem('kfp_records')||'[]');
 let cfg = JSON.parse(localStorage.getItem('kfp_cfg')||JSON.stringify({
-  level:1,holiday:17.5,ph:225,tfn:'tfn',superRate:11.5,startDate:'',dormEnabled:false,dormFee:0,
+  level:1,holiday:17.5,ph:225,tfn:'tfn',superRate:11.5,startDate:'',dormEnabled:false,dormFee:0,goalAmt:0,goalType:'',goalDate:'',
   workplaces:[{name:'옥수수 파트'},{name:'콩 파트'},{name:'카페'}],
   categories:['식비','교통','쇼핑','숙박','의료','통신','여행','기타'],
   manRate:940
@@ -1007,12 +1026,6 @@ function renderWdayLabel(){
 // ── 오늘의 한마디 ──
 const FORTUNE_MSGS=[
   // 호주 물가 비교 (이번주 주급 기반)
-  {get:(w)=>w>0,msg:(w)=>`이번주 예상 주급 $${w.toFixed(0)}`,sub:(w)=>`빅맥 ${Math.floor(w/8.5)}개, 아보카도토스트 ${Math.floor(w/22)}번 🥑`},
-  {get:(w)=>w>0,msg:(w)=>`이번주 예상 주급 $${w.toFixed(0)}`,sub:(w)=>`콜스 장보기 ${Math.floor(w/120)}주치, 편의점 커피 ${Math.floor(w/5)}잔 🛒`},
-  {get:(w)=>w>0,msg:(w)=>`이번주 예상 주급 $${w.toFixed(0)}`,sub:(w)=>`치킨 ${Math.floor(w/22)}마리, 피쉬앤칩스 ${Math.floor(w/16)}번 🍗`},
-  {get:(w)=>w>0,msg:(w)=>`이번주 예상 주급 $${w.toFixed(0)}`,sub:(w)=>`버스 ${Math.floor(w/4.2)}번, 주유 ${Math.floor(w/90)}번 🚌`},
-  {get:(w)=>w>0,msg:(w)=>`이번주 예상 주급 $${w.toFixed(0)}`,sub:(w)=>`밀크티 ${Math.floor(w/7)}잔, 스시트레인 ${Math.floor(w/30)}번 🍵`},
-  {get:(w)=>w>0,msg:(w)=>`이번주 예상 주급 $${w.toFixed(0)}`,sub:(w)=>`넷플릭스 ${Math.floor(w/17.99)}달, 짐 ${Math.floor(w/50)}달 🏋️`},
   // 한국어 응원 메시지 10개
   {get:()=>true,msg:()=>`오늘도 수고했어요 💪`,sub:()=>`땀 흘린 만큼 통장도 두꺼워지는 중`},
   {get:()=>true,msg:()=>`비도 오고 더워도 출근한 당신`,sub:()=>`호주 날씨도 통장도 이겨내는 중 ☀️`},
@@ -1249,11 +1262,20 @@ function getThisWeekPay(){
   return pay+wr.filter(r=>r.support).reduce((a,r)=>a+r.gross,0);
 }
 
+let _fortuneHistory=[];
 function refreshFortune(){
   const w=getThisWeekPay();
   const el=document.getElementById('fortuneMsg');if(!el)return;
   const eligible=FORTUNE_MSGS.filter(f=>f.get(w));
-  const f=eligible[Math.floor(Math.random()*eligible.length)];
+  // 최근 본 1/3은 제외 → 그래도 후보 없으면 전체에서 선택
+  const histLen=Math.floor(eligible.length/3);
+  let pool=eligible.filter((_,i)=>!_fortuneHistory.includes(i));
+  if(pool.length===0){_fortuneHistory=[];pool=eligible;}
+  const idx=Math.floor(Math.random()*pool.length);
+  const f=pool[idx];
+  const origIdx=eligible.indexOf(f);
+  _fortuneHistory.push(origIdx);
+  if(_fortuneHistory.length>histLen)_fortuneHistory.shift();
   document.getElementById('fortuneMsg').textContent=f.msg(w);
   document.getElementById('fortuneSub').textContent=f.sub(w);
 }
@@ -1333,6 +1355,9 @@ function init(){
 
 function loadCfg(){
   document.getElementById('sLevel').value=cfg.level||1;
+  document.getElementById('sGoalAmt').value=cfg.goalAmt||'';
+  document.getElementById('sGoalType').value=cfg.goalType||'';
+  document.getElementById('sGoalDate').value=cfg.goalDate||'';
   document.getElementById('sHoliday').value=cfg.holiday;
   document.getElementById('sPH').value=cfg.ph||225;
   document.getElementById('sTFN').value=cfg.tfn;
@@ -1349,6 +1374,9 @@ function onLevelChange(){
 }
 function saveSetting(){
   cfg.level=parseInt(document.getElementById('sLevel').value)||1;
+  cfg.goalAmt=parseFloat(document.getElementById('sGoalAmt').value)||0;
+  cfg.goalType=document.getElementById('sGoalType').value||'';
+  cfg.goalDate=document.getElementById('sGoalDate').value||'';
   cfg.wage=LEVEL_WAGES[cfg.level]||32.19;
   cfg.holiday=parseFloat(document.getElementById('sHoliday').value)||17.5;
   cfg.ph=parseFloat(document.getElementById('sPH').value)||225;
@@ -1379,6 +1407,13 @@ function renameWP(oldName,newName){
   records.forEach(r=>{if(r.type==='work'&&r.place===oldName)r.place=newName;});
   save();renderWpList();updateSelects();render();
   showToast(`'${newName}'으로 변경됐어요!`);
+}
+function saveGoal(){
+  cfg.goalAmt=parseFloat(document.getElementById('gAmt').value)||0;
+  cfg.goalDate=document.getElementById('gDate').value;
+  cfg.goalType=document.getElementById('gType').value;
+  localStorage.setItem('kfp_cfg',JSON.stringify(cfg));
+  closeM('mGoal');render();showToast('목표 저장!');
 }
 function removeWP(n){cfg.workplaces=cfg.workplaces.filter(w=>w.name!==n);localStorage.setItem('kfp_cfg',JSON.stringify(cfg));renderWpList();updateSelects();}
 function renderWpList(){
@@ -1467,6 +1502,12 @@ function saveWork(){
   const lvAtSave=cfg.level||1;
   records.unshift({id:Date.now(),type:'work',date:document.getElementById('wDate').value,place:document.getElementById('wPlace').value||'미정',hours:h,mins:m,holiday:hol,support:sup,dailyRate:dr,appliedRate:rate,gross,tax,net:gross-tax,superAmt,level:lvAtSave,levelWage:LEVEL_WAGES[lvAtSave]||32.19,memo:document.getElementById('wMemo').value});
   save();closeM('mWork');showToast(sup?'지원 근무 저장!':'근무 기록 저장!');
+  // 저장 후 날짜를 오늘로 리셋 (다음 입력 시 실수 방지)
+  document.getElementById('wDate').value=ds(new Date());
+  document.getElementById('wH').value='';
+  document.getElementById('wM').value='';
+  document.getElementById('wMemo').value='';
+  autoFillWage();calcW();
   ['wH','wM','wMemo'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('wHol').checked=false;document.getElementById('wSupport').checked=false;autoFillWage();
 }
@@ -1475,6 +1516,7 @@ function saveSpend(){
   if(!amt||amt<=0){showToast('금액을 입력해주세요');return;}
   records.unshift({id:Date.now(),type:'spend',date:document.getElementById('sDate').value,category:document.getElementById('sCat').value,amount:amt,memo:document.getElementById('sMemo').value});
   save();closeM('mSpend');showToast('지출 기록 저장!');
+  document.getElementById('sDate').value=ds(new Date());
   document.getElementById('sAmt').value='';document.getElementById('sMemo').value='';
 }
 function saveIncome(){
@@ -1482,6 +1524,7 @@ function saveIncome(){
   if(!amt||amt<=0){showToast('금액을 입력해주세요');return;}
   records.unshift({id:Date.now(),type:'income',date:document.getElementById('iDate').value,amount:amt,memo:document.getElementById('iMemo').value});
   save();closeM('mIncome');showToast('수입 기록 저장!');
+  document.getElementById('iDate').value=ds(new Date());
   document.getElementById('iAmt').value='';document.getElementById('iMemo').value='';
 }
 function delRec(id){records=records.filter(r=>r.id!==id);save();showToast('삭제됨');}
@@ -1692,12 +1735,12 @@ function renderCalendar(){
         // 마지막 날이 일요일이 아니면 빈 칸 채우기
         if(isLastDay&&dow!==6){const rem=6-dow;for(let i=0;i<rem;i++)html+=`<div class="cal-day other-month"></div>`;}
         const hh=Math.floor(ws.hours),mm=Math.round((ws.hours-hh)*60);
-        html+=`<div style="grid-column:1/-1;background:var(--camel-pale);border:1px solid var(--divider);border-radius:12px;padding:9px 14px;margin:2px 0 4px;display:flex;justify-content:space-around;align-items:center">
-          <div style="text-align:center"><div style="font-size:9px;font-weight:700;color:var(--textl);margin-bottom:3px">세전수입</div><div style="font-size:13px;font-weight:800;color:var(--text)">$${ws.earn.toFixed(0)}</div></div>
-          <div style="width:1px;height:28px;background:var(--divider)"></div>
-          <div style="text-align:center"><div style="font-size:9px;font-weight:700;color:var(--textl);margin-bottom:3px">근무시간</div><div style="font-size:13px;font-weight:800;color:var(--sky-dark)">${hh}h${mm>0?' '+mm+'m':''}</div></div>
-          <div style="width:1px;height:28px;background:var(--divider)"></div>
-          <div style="text-align:center"><div style="font-size:9px;font-weight:700;color:var(--textl);margin-bottom:3px">순수익</div><div style="font-size:13px;font-weight:800;color:var(--green)">$${ws.net.toFixed(0)}</div></div>
+        html+=`<div style="grid-column:1/-1;background:var(--camel-pale);border:1px solid var(--divider);border-radius:8px;padding:5px 10px;margin:1px 0 3px;display:flex;justify-content:space-around;align-items:center">
+          <div style="text-align:center"><div style="font-size:8px;font-weight:700;color:var(--textl);margin-bottom:1px">세전</div><div style="font-size:11px;font-weight:800;color:var(--text)">$${ws.earn.toFixed(0)}</div></div>
+          <div style="width:1px;height:18px;background:var(--divider)"></div>
+          <div style="text-align:center"><div style="font-size:8px;font-weight:700;color:var(--textl);margin-bottom:1px">시간</div><div style="font-size:11px;font-weight:800;color:var(--sky-dark)">${hh}h${mm>0?mm+'m':''}</div></div>
+          <div style="width:1px;height:18px;background:var(--divider)"></div>
+          <div style="text-align:center"><div style="font-size:8px;font-weight:700;color:var(--textl);margin-bottom:1px">순수익</div><div style="font-size:11px;font-weight:800;color:var(--green)">$${ws.net.toFixed(0)}</div></div>
         </div>`;
         lastWkRendered=d;
       }
@@ -1849,9 +1892,10 @@ function renderWkCharts(){
 }
 
 function openM(type){
-  const map={work:'mWork',spend:'mSpend',income:'mIncome'};
+  const map={work:'mWork',spend:'mSpend',income:'mIncome',goal:'mGoal'};
   document.getElementById(map[type]).classList.add('open');
   if(type==='work'){autoFillWage();calcW();updateSelects();}
+  if(type==='goal'){document.getElementById('gAmt').value=cfg.goalAmt||'';document.getElementById('gDate').value=cfg.goalDate||'';document.getElementById('gType').value=cfg.goalType||'';}
   if(type==='spend')updateSelects();
   if(type==='goal'){document.getElementById('gAmt').value=cfg.goalAmt||'';document.getElementById('gDate').value=cfg.goalDate||'';document.getElementById('gType').value=cfg.goalType||'';}
 }
@@ -1906,6 +1950,18 @@ init();
         <span style="font-size:11px;opacity:0.75">(농업, 임업, 어업, 광업, 건설업 등)</span>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ── GOAL MODAL ── -->
+<div class="mover" id="mGoal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="mtitle">🎯 저축 목표 <button class="mclose" onclick="closeM('mGoal')">✕</button></div>
+    <div class="fg"><label>목표 유형 (이모지 포함 가능)</label><input type="text" id="gType" placeholder="예: 🚗 자동차, ✈️ 여행"></div>
+    <div class="fg"><label>목표 금액 (AUD)</label><input type="number" id="gAmt" placeholder="8000"></div>
+    <div class="fg"><label>목표 날짜 (선택)</label><input type="date" id="gDate"></div>
+    <button class="subbtn" onclick="saveGoal()">저장하기</button>
   </div>
 </div>
 </body>
