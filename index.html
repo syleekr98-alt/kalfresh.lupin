@@ -1753,12 +1753,12 @@ function renderCalendar(){
       if(ws&&ws.earn>0){
         if(isLastDay&&dow!==6){const rem=6-dow;for(let i=0;i<rem;i++)html+=`<div class="cal-day other-month"></div>`;}
         const hh=Math.floor(ws.hours),mm=Math.round((ws.hours-hh)*60);
-        html+=`<div style="grid-column:1/-1;background:var(--camel-pale);border:1px solid var(--divider);border-radius:8px;padding:5px 10px;margin:1px 0 3px;display:flex;justify-content:center;gap:10px;align-items:center">
-          <div style="text-align:center"><div style="font-size:8px;font-weight:700;color:var(--textl);margin-bottom:1px">세전</div><div style="font-size:11px;font-weight:800;color:var(--text)">$${ws.earn.toFixed(0)}</div></div>
-          <div style="width:1px;height:18px;background:var(--divider)"></div>
-          <div style="text-align:center"><div style="font-size:8px;font-weight:700;color:var(--textl);margin-bottom:1px">시간</div><div style="font-size:11px;font-weight:800;color:var(--sky-dark)">${hh}h${mm>0?mm+'m':''}</div></div>
-          <div style="width:1px;height:18px;background:var(--divider)"></div>
-          <div style="text-align:center"><div style="font-size:8px;font-weight:700;color:var(--textl);margin-bottom:1px">순수익</div><div style="font-size:11px;font-weight:800;color:var(--green)">$${ws.net.toFixed(0)}</div></div>
+        html+=`<div style="grid-column:1/-1;display:flex;justify-content:center;gap:10px;align-items:center;padding:2px 0;margin:1px 0 2px">
+          <div style="text-align:center"><div style="font-size:8px;font-weight:700;color:var(--textl)">세전</div><div style="font-size:11px;font-weight:800;color:var(--textm)">$${ws.earn.toFixed(0)}</div></div>
+          <div style="width:1px;height:16px;background:var(--divider)"></div>
+          <div style="text-align:center"><div style="font-size:8px;font-weight:700;color:var(--textl)">시간</div><div style="font-size:11px;font-weight:800;color:var(--sky-dark)">${hh}h${mm>0?mm+'m':''}</div></div>
+          <div style="width:1px;height:16px;background:var(--divider)"></div>
+          <div style="text-align:center"><div style="font-size:8px;font-weight:700;color:var(--textl)">순수익</div><div style="font-size:11px;font-weight:800;color:var(--green)">$${ws.net.toFixed(0)}</div></div>
         </div>`;
         lastWkRendered=d;
       }
