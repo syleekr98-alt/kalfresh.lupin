@@ -825,7 +825,7 @@ body {
       <div class="setrow"><div><div class="sn">첫 출근일</div><div class="ss">설정하면 근무 일수 표시</div></div><input type="date" id="sStartDate" oninput="saveSetting()"></div>
     </div>
     <div class="set-group">
-      <div class="set-group-title">저축 목표</div>
+      <div class="set-group-title" style="display:flex;justify-content:space-between;align-items:center">저축 목표 <button onclick="resetGoal()" style="font-size:11px;font-weight:700;background:var(--red-pale);border:1px solid var(--red);color:var(--red);border-radius:8px;padding:3px 10px;cursor:pointer;font-family:inherit">초기화</button></div>
       <div class="setrow"><div><div class="sn">목표 유형</div><div class="ss">이모지 포함 자유롭게 입력</div></div><input type="text" id="sGoalType" placeholder="예: 🚗 자동차" style="width:130px" oninput="saveSetting()"></div>
       <div class="setrow"><div><div class="sn">목표 금액 (AUD)</div></div><input type="number" id="sGoalAmt" placeholder="8000" oninput="saveSetting()"></div>
       <div class="setrow"><div><div class="sn">목표 날짜 (선택)</div></div><input type="date" id="sGoalDate" oninput="saveSetting()"></div>
@@ -1408,6 +1408,14 @@ function renameWP(oldName,newName){
   save();renderWpList();updateSelects();render();
   showToast(`'${newName}'으로 변경됐어요!`);
 }
+function resetGoal(){
+  cfg.goalAmt=0;cfg.goalType='';cfg.goalDate='';
+  localStorage.setItem('kfp_cfg',JSON.stringify(cfg));
+  document.getElementById('sGoalAmt').value='';
+  document.getElementById('sGoalType').value='';
+  document.getElementById('sGoalDate').value='';
+  render();showToast('저축 목표 초기화!');
+}
 function saveGoal(){
   cfg.goalAmt=parseFloat(document.getElementById('gAmt').value)||0;
   cfg.goalDate=document.getElementById('gDate').value;
@@ -1690,6 +1698,8 @@ function renderCalendar(){
   const el=document.getElementById('calGrid');
   const now=new Date();const firstDay=new Date(hY,hM,1);const lastDay=new Date(hY,hM+1,0);
   const startDow=firstDay.getDay()===0?6:firstDay.getDay()-1;
+
+  // 이번달 dayMap
   const dayMap={};
   getMRecs(hY,hM).forEach(r=>{
     const d=r.date.slice(8,10);if(!dayMap[d])dayMap[d]={earn:0,spend:0,hours:0,net:0};
@@ -1697,17 +1707,27 @@ function renderCalendar(){
     else if(r.type==='income')dayMap[d].earn+=r.amount;
     else if(r.type==='spend')dayMap[d].spend+=r.amount;
   });
-  // 주차별 요약 계산 (월~일 기준)
+
+  // 주차별 요약 — 주간 전체 데이터(이전달/다음달 포함)로 계산
   const wkMap={};
-  for(let d=1;d<=lastDay.getDate();d++){
-    const date=new Date(hY,hM,d);
-    const dow=date.getDay()===0?6:date.getDay()-1; // 0=월,6=일
-    const monDate=new Date(hY,hM,d-dow);
-    const wkKey=monDate.toISOString().slice(0,10);
-    if(!wkMap[wkKey])wkMap[wkKey]={earn:0,hours:0,net:0,sunDay:d+(6-dow)};
-    const dd=String(d).padStart(2,'0');
-    if(dayMap[dd]){wkMap[wkKey].earn+=dayMap[dd].earn;wkMap[wkKey].hours+=dayMap[dd].hours;wkMap[wkKey].net+=dayMap[dd].net;}
-  }
+  // 캘린더 첫 칸(월요일)과 마지막 칸(일요일) 계산
+  const calStartD=new Date(hY,hM,1-startDow);
+  const endDow=lastDay.getDay()===0?6:lastDay.getDay()-1;
+  const calEndD=new Date(hY,hM,lastDay.getDate()+(6-endDow));
+  // YYYY-MM-DD 문자열로 비교 (timezone 안전)
+  const fmt=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const calStartStr=fmt(calStartD),calEndStr=fmt(calEndD);
+  const allRecs=records.filter(r=>r.date>=calStartStr&&r.date<=calEndStr);
+  allRecs.forEach(r=>{
+    const date=new Date(r.date+'T12:00:00'); // timezone 안전
+    const dow2=date.getDay()===0?6:date.getDay()-1;
+    const monDate=new Date(date);monDate.setDate(date.getDate()-dow2);
+    const wkKey=fmt(monDate);
+    if(!wkMap[wkKey])wkMap[wkKey]={earn:0,hours:0,net:0};
+    if(r.type==='work'){wkMap[wkKey].earn+=r.gross;wkMap[wkKey].net+=(r.gross-r.tax);wkMap[wkKey].hours+=r.hours+r.mins/60;}
+    else if(r.type==='income')wkMap[wkKey].earn+=r.amount;
+  });
+
   const hdrs=['월','화','수','목','금','토','일'];
   let html=hdrs.map(h=>`<div class="cal-day-hdr">${h}</div>`).join('');
   for(let i=0;i<startDow;i++)html+=`<div class="cal-day other-month"></div>`;
@@ -1723,19 +1743,17 @@ function renderCalendar(){
       amt=`<div class="cam ${net<0?'neg':''}">${net>=0?'+':''}$${Math.round(Math.abs(net))}</div>`;
     }
     html+=`<div class="cal-day ${isToday?'today':''}" onclick="showCalDay(${d})"><div class="dn">${d}</div>${dots}${amt}</div>`;
-    // 일요일(dow=6)이거나 월 마지막 날이면 주간 요약 삽입
-    const date=new Date(hY,hM,d);
-    const dow=date.getDay()===0?6:date.getDay()-1;
+    const date2=new Date(hY,hM,d);
+    const dow=date2.getDay()===0?6:date2.getDay()-1;
     const isLastDay=d===lastDay.getDate();
     if((dow===6||isLastDay)&&lastWkRendered!==d){
       const monDate=new Date(hY,hM,d-dow);
-      const wkKey=monDate.toISOString().slice(0,10);
+      const wkKey=fmt(monDate);
       const ws=wkMap[wkKey];
       if(ws&&ws.earn>0){
-        // 마지막 날이 일요일이 아니면 빈 칸 채우기
         if(isLastDay&&dow!==6){const rem=6-dow;for(let i=0;i<rem;i++)html+=`<div class="cal-day other-month"></div>`;}
         const hh=Math.floor(ws.hours),mm=Math.round((ws.hours-hh)*60);
-        html+=`<div style="grid-column:1/-1;background:var(--camel-pale);border:1px solid var(--divider);border-radius:8px;padding:5px 10px;margin:1px 0 3px;display:flex;justify-content:space-around;align-items:center">
+        html+=`<div style="grid-column:1/-1;background:var(--camel-pale);border:1px solid var(--divider);border-radius:8px;padding:5px 10px;margin:1px 0 3px;display:flex;justify-content:center;gap:10px;align-items:center">
           <div style="text-align:center"><div style="font-size:8px;font-weight:700;color:var(--textl);margin-bottom:1px">세전</div><div style="font-size:11px;font-weight:800;color:var(--text)">$${ws.earn.toFixed(0)}</div></div>
           <div style="width:1px;height:18px;background:var(--divider)"></div>
           <div style="text-align:center"><div style="font-size:8px;font-weight:700;color:var(--textl);margin-bottom:1px">시간</div><div style="font-size:11px;font-weight:800;color:var(--sky-dark)">${hh}h${mm>0?mm+'m':''}</div></div>
