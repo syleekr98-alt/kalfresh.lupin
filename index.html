@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#8B6F5E">
 <title>🌽 칼프루팡</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=Pacifico&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=Nunito:wght@600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
 :root {
   /* Palette from photo */
@@ -79,9 +79,9 @@ body {
 }
 
 .logo-area h1 {
-  font-family:'Pacifico',cursive;
+  font-family:'Nunito','Noto Sans KR',sans-serif;
   font-size:22px;
-  font-weight:400;
+  font-weight:900;
   color:#fff;
   text-shadow:0 1px 3px rgba(60,40,20,0.5), 0 3px 10px rgba(60,40,20,0.3);
   letter-spacing:-0.5px;
@@ -759,7 +759,7 @@ body {
 
     <!-- GOAL HERO -->
 <div style="margin:0 16px 10px;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--divider);border-radius:14px;padding:13px 16px;box-shadow:var(--sh)">
-      <input type="checkbox" id="dormDeductCheck" style="width:18px;height:18px;accent-color:var(--camel);cursor:pointer" onchange="renderStats()">
+      <input type="checkbox" id="dormDeductCheck" style="width:18px;height:18px;accent-color:var(--camel);cursor:pointer" onchange="saveDormCheck();renderStats()">
       <label for="dormDeductCheck" style="font-size:13px;font-weight:700;color:var(--text);cursor:pointer;flex:1">🏠 숙소비 차감
         <span id="dormDeductAmt" style="font-size:11px;font-weight:600;color:var(--textl);margin-left:6px"></span>
       </label>
@@ -1344,10 +1344,21 @@ function renderSecondResult(days,hours){
   </div>`;
 }
 
+function saveDormCheck(){
+  const checked=document.getElementById('dormDeductCheck').checked;
+  localStorage.setItem('kfp_dormCheck', checked?'1':'0');
+}
+
 function init(){
   const now=new Date();
   ['wDate','sDate','iDate'].forEach(id=>document.getElementById(id).value=ds(now));
   document.getElementById('statMnav').style.display='';
+  // 숙소비 체크 상태 복원
+  const dormSaved=localStorage.getItem('kfp_dormCheck');
+  if(dormSaved==='1'){
+    const cb=document.getElementById('dormDeductCheck');
+    if(cb)cb.checked=true;
+  }
   loadCfg();fetchRate();render();
   renderWdayLabel();
   refreshFortune();
@@ -1411,9 +1422,12 @@ function renameWP(oldName,newName){
 function resetGoal(){
   cfg.goalAmt=0;cfg.goalType='';cfg.goalDate='';
   localStorage.setItem('kfp_cfg',JSON.stringify(cfg));
-  document.getElementById('sGoalAmt').value='';
-  document.getElementById('sGoalType').value='';
-  document.getElementById('sGoalDate').value='';
+  // oninput 트리거 방지 — value 직접 설정
+  const a=document.getElementById('sGoalAmt');
+  const t=document.getElementById('sGoalType');
+  const d=document.getElementById('sGoalDate');
+  if(a)a.value='';if(t)t.value='';if(d)d.value='';
+  document.getElementById('savebar').style.display='none';
   render();showToast('저축 목표 초기화!');
 }
 function saveGoal(){
