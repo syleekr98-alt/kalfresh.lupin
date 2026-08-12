@@ -826,9 +826,9 @@ body {
     </div>
     <div class="set-group">
       <div class="set-group-title" style="display:flex;justify-content:space-between;align-items:center">저축 목표 <button onclick="resetGoal()" style="font-size:11px;font-weight:700;background:var(--red-pale);border:1px solid var(--red);color:var(--red);border-radius:8px;padding:3px 10px;cursor:pointer;font-family:inherit">초기화</button></div>
-      <div class="setrow"><div><div class="sn">목표 유형</div><div class="ss">이모지 포함 자유롭게 입력</div></div><input type="text" id="sGoalType" placeholder="예: 🚗 자동차" style="width:130px" oninput="saveSetting()"></div>
-      <div class="setrow"><div><div class="sn">목표 금액 (AUD)</div></div><input type="number" id="sGoalAmt" placeholder="8000" oninput="saveSetting()"></div>
-      <div class="setrow"><div><div class="sn">목표 날짜 (선택)</div></div><input type="date" id="sGoalDate" oninput="saveSetting()"></div>
+      <div class="setrow"><div><div class="sn">목표 유형</div><div class="ss">이모지 포함 자유롭게 입력</div></div><input type="text" id="sGoalType" placeholder="예: 🚗 자동차" style="width:130px" oninput="saveGoalSetting()"></div>
+      <div class="setrow"><div><div class="sn">목표 금액 (AUD)</div></div><input type="number" id="sGoalAmt" placeholder="8000" oninput="saveGoalSetting()"></div>
+      <div class="setrow"><div><div class="sn">목표 날짜 (선택)</div></div><input type="date" id="sGoalDate" oninput="saveGoalSetting()"></div>
     </div>
     <div class="set-group">
       <div class="set-group-title">숙소 설정</div>
@@ -1385,9 +1385,6 @@ function onLevelChange(){
 }
 function saveSetting(){
   cfg.level=parseInt(document.getElementById('sLevel').value)||1;
-  cfg.goalAmt=parseFloat(document.getElementById('sGoalAmt').value)||0;
-  cfg.goalType=document.getElementById('sGoalType').value||'';
-  cfg.goalDate=document.getElementById('sGoalDate').value||'';
   cfg.wage=LEVEL_WAGES[cfg.level]||32.19;
   cfg.holiday=parseFloat(document.getElementById('sHoliday').value)||17.5;
   cfg.ph=parseFloat(document.getElementById('sPH').value)||225;
@@ -1398,6 +1395,13 @@ function saveSetting(){
   cfg.manRate=parseFloat(document.getElementById('sManRate').value)||940;
   localStorage.setItem('kfp_cfg',JSON.stringify(cfg));
   renderWdayLabel();render();
+}
+function saveGoalSetting(){
+  cfg.goalAmt=parseFloat(document.getElementById('sGoalAmt').value)||0;
+  cfg.goalType=document.getElementById('sGoalType').value||'';
+  cfg.goalDate=document.getElementById('sGoalDate').value||'';
+  localStorage.setItem('kfp_cfg',JSON.stringify(cfg));
+  render();
 }
 function addWP(){
   const v=document.getElementById('newWP').value.trim();
