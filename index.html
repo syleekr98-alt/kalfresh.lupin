@@ -1426,12 +1426,14 @@ function renameWP(oldName,newName){
 function resetGoal(){
   cfg.goalAmt=0;cfg.goalType='';cfg.goalDate='';
   localStorage.setItem('kfp_cfg',JSON.stringify(cfg));
-  // oninput 트리거 방지 — value 직접 설정
   const a=document.getElementById('sGoalAmt');
   const t=document.getElementById('sGoalType');
   const d=document.getElementById('sGoalDate');
   if(a)a.value='';if(t)t.value='';if(d)d.value='';
+  // savebar 즉시 숨김
   document.getElementById('savebar').style.display='none';
+  document.getElementById('sbFill').style.width='0%';
+  document.getElementById('sbPct').textContent='0%';
   render();showToast('저축 목표 초기화!');
 }
 function saveGoal(){
@@ -1616,10 +1618,18 @@ function renderHeader(){
   if(cfg.goalAmt>0){
     document.getElementById('savebar').style.display='block';
     const pct=Math.min(100,Math.max(0,totalNet/cfg.goalAmt*100));
-    document.getElementById('sbFill').style.width=pct+'%';
-    document.getElementById('sbLabel').textContent=`${cfg.goalType||'목표'} $${cfg.goalAmt.toLocaleString()}`;
-    document.getElementById('sbPct').textContent=`${pct.toFixed(0)}%`;
-  } else {document.getElementById('savebar').style.display='none';}
+    const remain=Math.max(0,cfg.goalAmt-totalNet);
+    document.getElementById('sbFill').style.width=pct.toFixed(1)+'%';
+    document.getElementById('sbPct').textContent=pct>=100?'🎉 달성!':pct.toFixed(0)+'%';
+    document.getElementById('sbLabel').textContent=`${cfg.goalType||'저축 목표'} $${cfg.goalAmt.toLocaleString()}`;
+    document.getElementById('sbEmoji').textContent=pct>=100?'🎊':pct>=75?'🔥':pct>=50?'💪':pct>=25?'🌱':'🎯';
+    document.getElementById('sbSaved').textContent=`저축 $${totalNet.toFixed(0)}`;
+    document.getElementById('sbRemain').textContent=remain>0?`남은 금액 $${remain.toFixed(0)}`:'목표 달성! 🎊';
+  } else {
+    document.getElementById('savebar').style.display='none';
+    document.getElementById('sbFill').style.width='0%';
+    document.getElementById('sbPct').textContent='0%';
+  }
 }
 
 // CHEST SVG for goal
