@@ -1401,7 +1401,7 @@ function saveGoalSetting(){
   cfg.goalType=document.getElementById('sGoalType').value||'';
   cfg.goalDate=document.getElementById('sGoalDate').value||'';
   localStorage.setItem('kfp_cfg',JSON.stringify(cfg));
-  render();
+  renderHeader();
 }
 function addWP(){
   const v=document.getElementById('newWP').value.trim();
@@ -1426,6 +1426,7 @@ function renameWP(oldName,newName){
 function resetGoal(){
   cfg.goalAmt=0;cfg.goalType='';cfg.goalDate='';
   localStorage.setItem('kfp_cfg',JSON.stringify(cfg));
+  // input 값 직접 초기화
   const a=document.getElementById('sGoalAmt');
   const t=document.getElementById('sGoalType');
   const d=document.getElementById('sGoalDate');
@@ -1434,7 +1435,9 @@ function resetGoal(){
   document.getElementById('savebar').style.display='none';
   document.getElementById('sbFill').style.width='0%';
   document.getElementById('sbPct').textContent='0%';
-  render();showToast('저축 목표 초기화!');
+  // render() 대신 renderHeader()만 호출 (loadCfg 재호출 방지)
+  renderHeader();renderRecent();
+  showToast('저축 목표 초기화!');
 }
 function saveGoal(){
   cfg.goalAmt=parseFloat(document.getElementById('gAmt').value)||0;
